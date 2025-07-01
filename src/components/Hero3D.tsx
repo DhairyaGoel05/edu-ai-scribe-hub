@@ -1,69 +1,6 @@
 
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Float, Sphere, Box } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useRef, Suspense } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-
-const FloatingElements = () => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      <Float speed={1} rotationIntensity={0.5} floatIntensity={1}>
-        <Box position={[2, 0, 0]} args={[0.5, 0.5, 0.5]}>
-          <meshStandardMaterial color="#3B82F6" />
-        </Box>
-      </Float>
-      
-      <Float speed={1.2} rotationIntensity={0.8} floatIntensity={1.2}>
-        <Sphere position={[-2, 0, 0]} args={[0.4]}>
-          <meshStandardMaterial color="#8B5CF6" />
-        </Sphere>
-      </Float>
-      
-      <Float speed={0.8} rotationIntensity={0.6} floatIntensity={1.5}>
-        <Box position={[0, 1.5, 0]} args={[0.4, 0.8, 0.4]}>
-          <meshStandardMaterial color="#10B981" />
-        </Box>
-      </Float>
-    </group>
-  );
-};
-
-const Scene3D = () => {
-  return (
-    <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 5, 5]} intensity={0.8} />
-      
-      <FloatingElements />
-      
-      <OrbitControls 
-        enableZoom={false} 
-        autoRotate 
-        autoRotateSpeed={0.3}
-        enablePan={false}
-        maxPolarAngle={Math.PI / 2}
-        minPolarAngle={Math.PI / 3}
-      />
-    </>
-  );
-};
-
-const Simple3DFallback = () => (
-  <div className="absolute inset-0 flex items-center justify-center">
-    <div className="w-32 h-32 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full animate-pulse opacity-30"></div>
-  </div>
-);
 
 interface Hero3DProps {
   onGetStarted: () => void;
@@ -77,20 +14,51 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:20px_20px] opacity-30"></div>
       </div>
       
+      {/* Floating animated shapes */}
       <div className="absolute inset-0 z-0">
-        <Suspense fallback={<Simple3DFallback />}>
-          <Canvas 
-            camera={{ position: [0, 0, 6], fov: 50 }}
-            dpr={1}
-            onCreated={({ gl }) => {
-              gl.setPixelRatio(1);
-              gl.setClearColor('#000000', 0);
-            }}
-            fallback={<Simple3DFallback />}
-          >
-            <Scene3D />
-          </Canvas>
-        </Suspense>
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-20"
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 180, 360],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        <motion.div
+          className="absolute top-3/4 right-1/4 w-12 h-12 bg-gradient-to-r from-pink-500 to-red-600 rounded-lg opacity-20"
+          animate={{
+            y: [0, 15, 0],
+            rotate: [0, -180, -360],
+            scale: [1, 0.8, 1]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+        />
+        
+        <motion.div
+          className="absolute top-1/2 right-1/6 w-8 h-20 bg-gradient-to-r from-green-500 to-teal-600 rounded-full opacity-20"
+          animate={{
+            x: [0, 10, 0],
+            rotate: [0, 90, 0],
+            scale: [1, 1.3, 1]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
       </div>
       
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
