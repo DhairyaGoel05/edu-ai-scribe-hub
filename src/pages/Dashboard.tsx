@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -10,6 +9,7 @@ import ChatWithPDF from '@/components/ChatWithPDF';
 import SummaryGenerator from '@/components/SummaryGenerator';
 import MCQGenerator from '@/components/MCQGenerator';
 import APIKeySetup from '@/components/APIKeySetup';
+import TakeTest from '@/components/TakeTest';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -54,6 +54,8 @@ const Dashboard = () => {
         return <SummaryGenerator file={currentPDF} apiKey={apiKey} />;
       case 'mcq':
         return <MCQGenerator file={currentPDF} apiKey={apiKey} />;
+      case 'test':
+        return <TakeTest file={currentPDF} apiKey={apiKey} />;
       case 'settings':
         return (
           <div className="space-y-6">

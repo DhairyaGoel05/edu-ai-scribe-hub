@@ -1,9 +1,12 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Send, MessageCircle, Key } from 'lucide-react';
+import { AlertCircle, Send, MessageCircle, Key, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PDFService } from '@/services/pdfService';
+import { GeminiAPIService } from '@/services/geminiApiService';
 
 interface ChatMessage {
   type: 'user' | 'ai';
@@ -20,6 +23,30 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [pdfText, setPdfText] = useState<string>('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (file && apiKey) {
+      analyzePDF();
+    }
+  }, [file, apiKey]);
+
+  const analyzePDF = async () => {
+    if (!file) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const extractedText = await PDFService.extractTextFromPDF(file);
+      setPdfText(extractedText);
+      toast.success('PDF analyzed successfully!');
+    } catch (error) {
+      toast.error('Failed to analyze PDF');
+      console.error('PDF analysis error:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   if (!apiKey) {
     return (
@@ -68,7 +95,7 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
   }
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || !pdfText) return;
 
     const userMessage: ChatMessage = {
       type: 'user',
@@ -81,19 +108,19 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual PDF text extraction and Gemini API integration
-      // For now, we'll simulate a response
-      setTimeout(() => {
-        const aiMessage: ChatMessage = {
-          type: 'ai',
-          content: `I understand you're asking about "${inputMessage}". I'm analyzing your PDF "${file.name}" using Gemini AI. Once the full integration is complete, I'll be able to provide detailed answers based on the document content.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
-        setIsLoading(false);
-      }, 1000);
+      const geminiService = new GeminiAPIService(apiKey!);
+      const response = await geminiService.chatWithDocument(inputMessage, pdfText);
+      
+      const aiMessage: ChatMessage = {
+        type: 'ai',
+        content: response,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       toast.error('Failed to process message');
+      console.error('Chat error:', error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -103,6 +130,12 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat with PDF</h2>
         <p className="text-gray-600">Ask questions about: {file.name}</p>
+        {isAnalyzing && (
+          <div className="flex items-center space-x-2 text-blue-600 mt-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Analyzing PDF...</span>
+          </div>
+        )}
       </div>
 
       <Card className="w-full max-w-4xl mx-auto">
@@ -163,13 +196,13 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask a question about your PDF..."
+              placeholder={pdfText ? "Ask a question about your PDF..." : "Analyzing PDF, please wait..."}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={isLoading}
+              disabled={isLoading || !pdfText}
             />
             <Button 
               onClick={handleSendMessage} 
-              disabled={!inputMessage.trim() || isLoading}
+              disabled={!inputMessage.trim() || isLoading || !pdfText}
             >
               <Send className="w-4 h-4" />
             </Button>

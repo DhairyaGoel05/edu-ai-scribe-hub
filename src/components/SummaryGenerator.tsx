@@ -1,8 +1,11 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, FileSpreadsheet, Loader2, Youtube, Key } from 'lucide-react';
 import { toast } from 'sonner';
+import { PDFService } from '@/services/pdfService';
+import { GeminiAPIService } from '@/services/geminiApiService';
 
 interface SummaryGeneratorProps {
   file: File | null;
@@ -13,6 +16,25 @@ const SummaryGenerator = ({ file, apiKey }: SummaryGeneratorProps) => {
   const [summary, setSummary] = useState<string>('');
   const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pdfText, setPdfText] = useState<string>('');
+
+  useEffect(() => {
+    if (file && apiKey) {
+      analyzePDF();
+    }
+  }, [file, apiKey]);
+
+  const analyzePDF = async () => {
+    if (!file) return;
+    
+    try {
+      const extractedText = await PDFService.extractTextFromPDF(file);
+      setPdfText(extractedText);
+    } catch (error) {
+      toast.error('Failed to analyze PDF');
+      console.error('PDF analysis error:', error);
+    }
+  };
 
   if (!apiKey) {
     return (
@@ -61,33 +83,24 @@ const SummaryGenerator = ({ file, apiKey }: SummaryGeneratorProps) => {
   }
 
   const generateSummary = async () => {
+    if (!pdfText) {
+      toast.error('PDF is still being analyzed. Please wait.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Implement actual PDF text extraction and AI summarization
-      // For now, we'll simulate the process
-      setTimeout(() => {
-        setSummary(`AI-Generated Summary of ${file.name} (Using Gemini API):
-
-• Key concepts and main ideas extracted from the document
-• Important facts and figures identified through AI analysis
-• Relevant conclusions and takeaways highlighted
-• Structured overview of the content using advanced NLP
-
-The Gemini API has analyzed the entire PDF content and provided this comprehensive yet concise summary that captures the essential information while maintaining readability. The AI has identified the most important sections and distilled them into this format.`);
-
-        setYoutubeLinks([
-          'AI and Machine Learning Fundamentals',
-          'Advanced PDF Processing Techniques', 
-          'Natural Language Processing with Gemini',
-          'Educational Technology and AI Integration',
-          'Document Analysis and Summarization Methods'
-        ]);
-
-        setIsLoading(false);
-        toast.success('Summary generated using Gemini AI successfully!');
-      }, 2000);
+      const geminiService = new GeminiAPIService(apiKey!);
+      const generatedSummary = await geminiService.generateSummary(pdfText);
+      const youtubeTerms = await geminiService.generateYouTubeSearchTerms(pdfText);
+      
+      setSummary(generatedSummary);
+      setYoutubeLinks(youtubeTerms);
+      toast.success('Summary generated successfully!');
     } catch (error) {
       toast.error('Failed to generate summary');
+      console.error('Summary generation error:', error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -114,7 +127,7 @@ The Gemini API has analyzed the entire PDF content and provided this comprehensi
             <div className="text-center py-8">
               <Button 
                 onClick={generateSummary} 
-                disabled={isLoading}
+                disabled={isLoading || !pdfText}
                 size="lg"
                 className="mb-4"
               >
@@ -128,7 +141,7 @@ The Gemini API has analyzed the entire PDF content and provided this comprehensi
                 )}
               </Button>
               <p className="text-gray-500 text-sm">
-                Click to analyze your PDF and generate an AI-powered summary using Gemini
+                {pdfText ? 'Click to analyze your PDF and generate an AI-powered summary using Gemini' : 'Analyzing PDF, please wait...'}
               </p>
             </div>
           ) : (
