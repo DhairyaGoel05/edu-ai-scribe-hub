@@ -7,6 +7,8 @@ interface PDFViewerProps {
 }
 
 const PDFViewer = ({ file }: PDFViewerProps) => {
+  console.log('PDFViewer received file:', file);
+
   if (!file) {
     return (
       <div className="space-y-6">
@@ -30,7 +32,9 @@ const PDFViewer = ({ file }: PDFViewerProps) => {
     );
   }
 
+  // Create a blob URL for the PDF file
   const fileUrl = URL.createObjectURL(file);
+  console.log('Created PDF URL:', fileUrl);
 
   return (
     <div className="space-y-6">
@@ -50,11 +54,13 @@ const PDFViewer = ({ file }: PDFViewerProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-[600px] border rounded-lg overflow-hidden">
+          <div className="w-full h-[600px] border rounded-lg overflow-hidden bg-gray-100">
             <iframe
-              src={fileUrl}
-              className="w-full h-full"
+              src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+              className="w-full h-full border-0"
               title="PDF Viewer"
+              onLoad={() => console.log('PDF iframe loaded successfully')}
+              onError={() => console.error('PDF iframe failed to load')}
             />
           </div>
         </CardContent>

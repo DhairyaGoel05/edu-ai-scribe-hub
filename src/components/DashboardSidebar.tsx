@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +31,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSideba
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
+    console.log('Navigating to home...');
     navigate('/');
   };
 
@@ -44,11 +46,14 @@ const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSideba
             <SidebarMenu>
               {/* Landing Page Button */}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleHomeClick}>
-                  <div className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 cursor-pointer">
+                <SidebarMenuButton asChild>
+                  <button 
+                    onClick={handleHomeClick}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 cursor-pointer w-full text-left"
+                  >
                     <Home className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-gray-700 dark:text-gray-300">Back to Home</span>
-                  </div>
+                  </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
