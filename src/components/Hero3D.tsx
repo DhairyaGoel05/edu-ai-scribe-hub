@@ -68,7 +68,6 @@ const AnimatedText = () => {
       color="#1F2937"
       anchorX="center"
       anchorY="middle"
-      font="/fonts/Inter-Bold.woff"
     >
       AI Powered Learning
     </Text>
@@ -85,13 +84,13 @@ const ParticleField = () => {
     }
   });
 
-  const particleCount = 100;
+  const particleCount = 50;
   const positions = new Float32Array(particleCount * 3);
   
   for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+    positions[i * 3] = (Math.random() - 0.5) * 10;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
   }
 
   return (
@@ -146,7 +145,7 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.15)_1px,transparent_0)] bg-[length:20px_20px] opacity-30"></div>
       </div>
       
@@ -154,9 +153,15 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
         <Suspense fallback={<Simple3DFallback />}>
           <Canvas 
             camera={{ position: [0, 0, 8], fov: 60 }}
+            gl={{ 
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance"
+            }}
+            dpr={[1, 2]}
             onCreated={({ gl }) => {
               gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-              gl.setClearColor('#f8fafc', 0);
+              gl.setClearColor('#000000', 0);
             }}
             fallback={<Simple3DFallback />}
           >
@@ -172,7 +177,7 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
           transition={{ duration: 1, delay: 0.2 }}
         >
           <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-6 leading-tight"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-900 dark:text-white mb-6 leading-tight"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -190,7 +195,7 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
           </motion.h1>
           
           <motion.p 
-            className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
@@ -213,7 +218,7 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
             </Button>
             
             <motion.div 
-              className="flex items-center space-x-2 text-gray-600"
+              className="flex items-center space-x-2 text-gray-600 dark:text-gray-400"
               whileHover={{ scale: 1.05 }}
             >
               <span className="text-sm">✨ 500+ students using our platform</span>
@@ -228,8 +233,8 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-gray-400 rounded-full mt-2 animate-pulse"></div>
+        <div className="w-6 h-10 border-2 border-gray-400 dark:border-gray-600 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-gray-400 dark:bg-gray-600 rounded-full mt-2 animate-pulse"></div>
         </div>
       </motion.div>
     </section>
