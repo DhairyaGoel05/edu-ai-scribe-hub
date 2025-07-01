@@ -1,6 +1,6 @@
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Text, Float, Sphere, Torus, Box } from '@react-three/drei';
+import { OrbitControls, Float, Sphere, Box } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useRef, Suspense } from 'react';
@@ -12,117 +12,45 @@ const FloatingElements = () => {
   
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });
 
   return (
     <group ref={groupRef}>
-      <Float speed={1} rotationIntensity={1} floatIntensity={2}>
-        <Box position={[2, 1, 0]} args={[0.8, 0.8, 0.8]}>
+      <Float speed={1} rotationIntensity={0.5} floatIntensity={1}>
+        <Box position={[2, 0, 0]} args={[0.5, 0.5, 0.5]}>
           <meshStandardMaterial color="#3B82F6" />
         </Box>
       </Float>
       
-      <Float speed={1.5} rotationIntensity={2} floatIntensity={1.5}>
-        <Sphere position={[-2, 0.5, 0]} args={[0.6]}>
+      <Float speed={1.2} rotationIntensity={0.8} floatIntensity={1.2}>
+        <Sphere position={[-2, 0, 0]} args={[0.4]}>
           <meshStandardMaterial color="#8B5CF6" />
         </Sphere>
       </Float>
       
-      <Float speed={0.8} rotationIntensity={1.5} floatIntensity={2.5}>
-        <Torus position={[0, -1, 1]} args={[0.8, 0.3, 16, 32]}>
-          <meshStandardMaterial color="#EC4899" />
-        </Torus>
-      </Float>
-      
-      <Float speed={1.2} rotationIntensity={0.8} floatIntensity={1.8}>
-        <Box position={[-1, -0.5, -1]} args={[0.6, 1.2, 0.6]}>
+      <Float speed={0.8} rotationIntensity={0.6} floatIntensity={1.5}>
+        <Box position={[0, 1.5, 0]} args={[0.4, 0.8, 0.4]}>
           <meshStandardMaterial color="#10B981" />
         </Box>
       </Float>
-      
-      <Float speed={2} rotationIntensity={2.5} floatIntensity={1}>
-        <Sphere position={[1.5, -1.5, 0.5]} args={[0.4]}>
-          <meshStandardMaterial color="#F59E0B" />
-        </Sphere>
-      </Float>
     </group>
-  );
-};
-
-const AnimatedText = () => {
-  const textRef = useRef<THREE.Mesh>(null);
-  
-  useFrame((state) => {
-    if (textRef.current) {
-      textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.1;
-    }
-  });
-
-  return (
-    <Text
-      ref={textRef}
-      position={[0, 2, 0]}
-      fontSize={0.8}
-      color="#1F2937"
-      anchorX="center"
-      anchorY="middle"
-    >
-      AI Powered Learning
-    </Text>
-  );
-};
-
-const ParticleField = () => {
-  const particlesRef = useRef<THREE.Points>(null);
-  
-  useFrame((state) => {
-    if (particlesRef.current) {
-      particlesRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-      particlesRef.current.rotation.y = state.clock.elapsedTime * 0.05;
-    }
-  });
-
-  const particleCount = 50;
-  const positions = new Float32Array(particleCount * 3);
-  
-  for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 10;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
-  }
-
-  return (
-    <points ref={particlesRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          array={positions}
-          count={particleCount}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial color="#64748B" size={0.02} transparent opacity={0.6} />
-    </points>
   );
 };
 
 const Scene3D = () => {
   return (
     <>
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <pointLight position={[-10, -10, -5]} intensity={0.5} color="#8B5CF6" />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 5, 5]} intensity={0.8} />
       
-      <ParticleField />
       <FloatingElements />
-      <AnimatedText />
       
       <OrbitControls 
         enableZoom={false} 
         autoRotate 
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={0.3}
         enablePan={false}
         maxPolarAngle={Math.PI / 2}
         minPolarAngle={Math.PI / 3}
@@ -152,15 +80,10 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
       <div className="absolute inset-0 z-0">
         <Suspense fallback={<Simple3DFallback />}>
           <Canvas 
-            camera={{ position: [0, 0, 8], fov: 60 }}
-            gl={{ 
-              antialias: true,
-              alpha: true,
-              powerPreference: "high-performance"
-            }}
-            dpr={[1, 2]}
+            camera={{ position: [0, 0, 6], fov: 50 }}
+            dpr={1}
             onCreated={({ gl }) => {
-              gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+              gl.setPixelRatio(1);
               gl.setClearColor('#000000', 0);
             }}
             fallback={<Simple3DFallback />}
