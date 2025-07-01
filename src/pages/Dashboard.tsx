@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -35,8 +36,8 @@ const Dashboard = () => {
       return (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Setup Required</h2>
-            <p className="text-gray-600">Configure your Gemini API key to use AI features</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Setup Required</h2>
+            <p className="text-gray-600 dark:text-gray-300">Configure your Gemini API key to use AI features</p>
           </div>
           <APIKeySetup onKeyConfigured={handleApiKeyConfigured} currentKey={apiKey} />
         </div>
@@ -60,8 +61,8 @@ const Dashboard = () => {
         return (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Settings</h2>
-              <p className="text-gray-600">Manage your API keys and preferences</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Settings</h2>
+              <p className="text-gray-600 dark:text-gray-300">Manage your API keys and preferences</p>
             </div>
             <APIKeySetup onKeyConfigured={handleApiKeyConfigured} currentKey={apiKey} />
           </div>
@@ -73,7 +74,7 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <DashboardSidebar 
           activeTab={activeTab} 
           onTabChange={setActiveTab}

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Send, MessageCircle, Key, Loader2 } from 'lucide-react';
+import { AlertCircle, Send, MessageCircle, Key, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { PDFService } from '@/services/pdfService';
 import { GeminiAPIService } from '@/services/geminiApiService';
@@ -52,16 +52,16 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat with PDF</h2>
-          <p className="text-gray-600">Ask questions about your PDF document</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Chat with PDF</h2>
+          <p className="text-gray-600 dark:text-gray-300">Ask questions about your PDF document</p>
         </div>
 
-        <Card className="w-full max-w-2xl mx-auto">
+        <Card className="w-full max-w-2xl mx-auto border-2 border-dashed border-yellow-300 dark:border-yellow-600 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20">
           <CardContent className="pt-6">
             <div className="text-center py-12">
-              <Key className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Gemini API key required</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <Key className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-300 font-medium">Gemini API key required</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 Please configure your API key in Settings to use chat features
               </p>
             </div>
@@ -75,16 +75,16 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat with PDF</h2>
-          <p className="text-gray-600">Ask questions about your PDF document</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Chat with PDF</h2>
+          <p className="text-gray-600 dark:text-gray-300">Ask questions about your PDF document</p>
         </div>
 
-        <Card className="w-full max-w-2xl mx-auto">
+        <Card className="w-full max-w-2xl mx-auto border-2 border-dashed border-blue-300 dark:border-blue-600 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
           <CardContent className="pt-6">
             <div className="text-center py-12">
-              <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No PDF uploaded yet</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <AlertCircle className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-300 font-medium">No PDF uploaded yet</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 Please upload a PDF first to start chatting
               </p>
             </div>
@@ -127,33 +127,40 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat with PDF</h2>
-        <p className="text-gray-600">Ask questions about: {file.name}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center">
+            <Sparkles className="w-6 h-6 mr-2 text-purple-500" />
+            Chat with PDF
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">Ask questions about: <span className="font-medium text-blue-600 dark:text-blue-400">{file.name}</span></p>
+        </div>
         {isAnalyzing && (
-          <div className="flex items-center space-x-2 text-blue-600 mt-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Analyzing PDF...</span>
+          <div className="flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-blue-700 dark:text-blue-300">Analyzing PDF...</span>
           </div>
         )}
       </div>
 
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
+      <Card className="w-full max-w-4xl mx-auto shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+        <CardHeader className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-t-lg">
           <CardTitle className="flex items-center space-x-2">
             <MessageCircle className="w-5 h-5" />
             <span>AI Assistant</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-purple-100">
             Ask any questions about your PDF content and get intelligent responses
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-96 border rounded-lg p-4 overflow-y-auto mb-4 bg-gray-50">
+        <CardContent className="p-0">
+          <div className="h-96 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-800/50">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 mt-8">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Start a conversation about your PDF</p>
+              <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+                <div className="bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-full p-6 w-fit mx-auto mb-4">
+                  <MessageCircle className="w-12 h-12 text-purple-500" />
+                </div>
+                <p className="font-medium">Start a conversation about your PDF</p>
                 <p className="text-sm mt-2">Ask questions, request summaries, or seek clarification</p>
               </div>
             ) : (
@@ -164,14 +171,14 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
                     className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm ${
                         message.type === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white border text-gray-900'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                          : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white'
                       }`}
                     >
-                      <p className="text-sm">{message.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-xs mt-2 opacity-70">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -179,11 +186,11 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-white border text-gray-900 px-4 py-2 rounded-lg">
+                    <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white px-4 py-3 rounded-2xl shadow-sm">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
                     </div>
                   </div>
@@ -192,20 +199,24 @@ const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
             )}
           </div>
 
-          <div className="flex space-x-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={pdfText ? "Ask a question about your PDF..." : "Analyzing PDF, please wait..."}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={isLoading || !pdfText}
-            />
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!inputMessage.trim() || isLoading || !pdfText}
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+          <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-600 rounded-b-lg">
+            <div className="flex space-x-3">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder={pdfText ? "Ask a question about your PDF..." : "Analyzing PDF, please wait..."}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                disabled={isLoading || !pdfText}
+                className="flex-1 border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500 dark:focus:ring-purple-400"
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!inputMessage.trim() || isLoading || !pdfText}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
