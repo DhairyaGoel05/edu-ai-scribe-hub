@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -158,25 +159,25 @@ const Index = () => {
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-200">
-                <h3 className="text-2xl font-bold mb-4">Free Plan</h3>
+                <h3 className="text-2xl font-bold mb-4 text-gray-900">Free Plan</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">$0</span>
+                  <span className="text-4xl font-bold text-gray-900">$0</span>
                   <span className="text-gray-600">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <span className="text-green-500 mr-2">✓</span>
                     Up to 3 PDFs per month
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <span className="text-green-500 mr-2">✓</span>
                     Basic chat functionality
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <span className="text-green-500 mr-2">✓</span>
                     Summary generation
                   </li>
-                  <li className="flex items-center">
+                  <li className="flex items-center text-gray-700">
                     <span className="text-green-500 mr-2">✓</span>
                     5 MCQs per document
                   </li>
