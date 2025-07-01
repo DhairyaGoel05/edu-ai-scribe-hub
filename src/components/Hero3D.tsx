@@ -1,9 +1,9 @@
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Text, Box, Sphere } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -19,9 +19,10 @@ const FloatingCube = () => {
   });
 
   return (
-    <Box ref={meshRef} args={[1, 1, 1]} position={[2, 0, 0]}>
+    <mesh ref={meshRef} position={[2, 0, 0]}>
+      <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#8B5CF6" />
-    </Box>
+    </mesh>
   );
 };
 
@@ -36,9 +37,10 @@ const FloatingSphere = () => {
   });
 
   return (
-    <Sphere ref={meshRef} args={[0.8]} position={[-2, 0, 0]}>
+    <mesh ref={meshRef} position={[-2, 0, 0]}>
+      <sphereGeometry args={[0.8]} />
       <meshStandardMaterial color="#3B82F6" />
-    </Sphere>
+    </mesh>
   );
 };
 
@@ -63,6 +65,12 @@ const Scene3D = () => {
   );
 };
 
+const Simple3DFallback = () => (
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div className="w-32 h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse opacity-20"></div>
+  </div>
+);
+
 interface Hero3DProps {
   onGetStarted: () => void;
 }
@@ -71,9 +79,17 @@ const Hero3D = ({ onGetStarted }: Hero3DProps) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 5] }}>
-          <Scene3D />
-        </Canvas>
+        <Suspense fallback={<Simple3DFallback />}>
+          <Canvas 
+            camera={{ position: [0, 0, 5] }}
+            onCreated={({ gl }) => {
+              gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }}
+            fallback={<Simple3DFallback />}
+          >
+            <Scene3D />
+          </Canvas>
+        </Suspense>
       </div>
       
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
