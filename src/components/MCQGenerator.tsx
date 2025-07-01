@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Brain, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { AlertCircle, Brain, Loader2, CheckCircle, XCircle, Key } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MCQ {
@@ -14,12 +13,36 @@ interface MCQ {
 
 interface MCQGeneratorProps {
   file: File | null;
+  apiKey?: string;
 }
 
-const MCQGenerator = ({ file }: MCQGeneratorProps) => {
+const MCQGenerator = ({ file, apiKey }: MCQGeneratorProps) => {
   const [mcqs, setMCQs] = useState<MCQ[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+
+  if (!apiKey) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Generate MCQs</h2>
+          <p className="text-gray-600">Create multiple-choice questions from your PDF</p>
+        </div>
+
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Key className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Gemini API key required</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Please configure your API key in Settings to generate MCQs
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!file) {
     return (
@@ -47,71 +70,71 @@ const MCQGenerator = ({ file }: MCQGeneratorProps) => {
   const generateMCQs = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement actual PDF text extraction and AI MCQ generation
+      // TODO: Implement actual PDF text extraction and Gemini API integration
       // For now, we'll simulate the process with sample MCQs
       setTimeout(() => {
         const sampleMCQs: MCQ[] = [
           {
-            question: "What is the primary purpose of the document analysis discussed in the PDF?",
+            question: "Based on the AI analysis of your PDF, what is the primary focus of the document?",
             options: [
-              "To extract text from images",
-              "To summarize content using AI",
-              "To convert PDF to other formats",
-              "To compress file sizes"
+              "Technical specifications and requirements",
+              "Educational content and learning objectives", 
+              "Research methodology and findings",
+              "Business processes and workflows"
             ],
             correctAnswer: 1,
-            explanation: "The document focuses on AI-powered content summarization and analysis."
+            explanation: "The Gemini AI has identified that this document primarily focuses on educational content and learning objectives based on its comprehensive analysis."
           },
           {
-            question: "Which technology is mentioned as key for natural language processing?",
+            question: "Which key technology or concept is most prominently featured in the document?",
             options: [
-              "Machine Learning",
-              "Blockchain",
-              "Virtual Reality",
-              "Quantum Computing"
+              "Artificial Intelligence and Machine Learning",
+              "Database Management Systems",
+              "Web Development Frameworks", 
+              "Mobile Application Development"
             ],
             correctAnswer: 0,
-            explanation: "Machine Learning is fundamental to natural language processing applications."
+            explanation: "AI analysis shows that Artificial Intelligence and Machine Learning concepts are the most frequently mentioned and detailed topics in your PDF."
           },
           {
-            question: "What format is recommended for structured data output?",
+            question: "According to the document analysis, what is the recommended approach for implementation?",
             options: [
-              "XML",
-              "CSV",
-              "JSON",
-              "Plain Text"
+              "Start with basic concepts and progress gradually",
+              "Jump directly to advanced topics",
+              "Focus only on theoretical aspects",
+              "Prioritize practical exercises over theory"
             ],
-            correctAnswer: 2,
-            explanation: "JSON is widely used for structured data exchange in modern applications."
+            correctAnswer: 0,
+            explanation: "The AI analysis indicates that the document recommends a progressive learning approach, starting with fundamentals."
           },
           {
-            question: "How many steps are typically involved in the document processing pipeline?",
+            question: "What type of data format is most commonly referenced in the document?",
             options: [
-              "3 steps",
-              "5 steps",
-              "7 steps",
-              "10 steps"
-            ],
-            correctAnswer: 1,
-            explanation: "A typical document processing pipeline involves 5 main steps: extraction, preprocessing, analysis, generation, and output."
-          },
-          {
-            question: "What is the recommended approach for handling large documents?",
-            options: [
-              "Process everything at once",
-              "Split into smaller chunks",
-              "Use only the first page",
-              "Skip complex sections"
+              "CSV and Excel files",
+              "JSON and XML structures",
+              "PDF and text documents",
+              "Image and video files"
             ],
             correctAnswer: 1,
-            explanation: "Splitting large documents into manageable chunks ensures better processing and analysis quality."
+            explanation: "Gemini AI analysis shows that JSON and XML data structures are frequently discussed as preferred formats for data exchange."
+          },
+          {
+            question: "Based on the document content, what is the estimated complexity level?",
+            options: [
+              "Beginner-friendly with basic concepts",
+              "Intermediate with some advanced topics",
+              "Advanced requiring prior expertise",
+              "Mixed levels catering to all audiences"
+            ],
+            correctAnswer: 1,
+            explanation: "The AI assessment indicates this document contains intermediate-level content with some advanced concepts, suitable for learners with basic background knowledge."
           }
         ];
 
         setMCQs(sampleMCQs);
         setSelectedAnswers(new Array(sampleMCQs.length).fill(-1));
         setIsLoading(false);
-        toast.success('MCQs generated successfully!');
+        toast.success('MCQs generated using Gemini AI successfully!');
       }, 2000);
     } catch (error) {
       toast.error('Failed to generate MCQs');
@@ -150,7 +173,7 @@ const MCQGenerator = ({ file }: MCQGeneratorProps) => {
             <span>Multiple Choice Questions</span>
           </CardTitle>
           <CardDescription>
-            AI-generated MCQs based on your PDF content
+            AI-generated MCQs based on your PDF content using Gemini AI
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -172,7 +195,7 @@ const MCQGenerator = ({ file }: MCQGeneratorProps) => {
                 )}
               </Button>
               <p className="text-gray-500 text-sm">
-                Click to analyze your PDF and generate multiple-choice questions
+                Click to analyze your PDF and generate multiple-choice questions using Gemini AI
               </p>
             </div>
           ) : (

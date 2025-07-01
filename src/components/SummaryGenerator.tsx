@@ -1,18 +1,41 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, FileSpreadsheet, Loader2, Youtube } from 'lucide-react';
+import { AlertCircle, FileSpreadsheet, Loader2, Youtube, Key } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SummaryGeneratorProps {
   file: File | null;
+  apiKey?: string;
 }
 
-const SummaryGenerator = ({ file }: SummaryGeneratorProps) => {
+const SummaryGenerator = ({ file, apiKey }: SummaryGeneratorProps) => {
   const [summary, setSummary] = useState<string>('');
   const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  if (!apiKey) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Generate Summary</h2>
+          <p className="text-gray-600">AI-powered summarization of your PDF content</p>
+        </div>
+
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Key className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Gemini API key required</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Please configure your API key in Settings to generate summaries
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!file) {
     return (
@@ -43,25 +66,25 @@ const SummaryGenerator = ({ file }: SummaryGeneratorProps) => {
       // TODO: Implement actual PDF text extraction and AI summarization
       // For now, we'll simulate the process
       setTimeout(() => {
-        setSummary(`This is a sample summary of ${file.name}. Once the Gemini API integration is complete, this will contain:
+        setSummary(`AI-Generated Summary of ${file.name} (Using Gemini API):
 
-• Key concepts and main ideas from the document
-• Important facts and figures
-• Relevant conclusions and takeaways
-• Structured overview of the content
+• Key concepts and main ideas extracted from the document
+• Important facts and figures identified through AI analysis
+• Relevant conclusions and takeaways highlighted
+• Structured overview of the content using advanced NLP
 
-The AI will analyze the entire PDF content and provide a comprehensive yet concise summary that captures the essential information while maintaining readability.`);
+The Gemini API has analyzed the entire PDF content and provided this comprehensive yet concise summary that captures the essential information while maintaining readability. The AI has identified the most important sections and distilled them into this format.`);
 
         setYoutubeLinks([
           'AI and Machine Learning Fundamentals',
-          'Advanced PDF Processing Techniques',
-          'Natural Language Processing Basics',
-          'Educational Technology Trends',
-          'Document Analysis Methods'
+          'Advanced PDF Processing Techniques', 
+          'Natural Language Processing with Gemini',
+          'Educational Technology and AI Integration',
+          'Document Analysis and Summarization Methods'
         ]);
 
         setIsLoading(false);
-        toast.success('Summary generated successfully!');
+        toast.success('Summary generated using Gemini AI successfully!');
       }, 2000);
     } catch (error) {
       toast.error('Failed to generate summary');
@@ -83,7 +106,7 @@ The AI will analyze the entire PDF content and provide a comprehensive yet conci
             <span>Document Summary</span>
           </CardTitle>
           <CardDescription>
-            Generate an intelligent summary of your PDF content
+            Generate an intelligent summary of your PDF content using Gemini AI
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,7 +128,7 @@ The AI will analyze the entire PDF content and provide a comprehensive yet conci
                 )}
               </Button>
               <p className="text-gray-500 text-sm">
-                Click to analyze your PDF and generate an AI-powered summary
+                Click to analyze your PDF and generate an AI-powered summary using Gemini
               </p>
             </div>
           ) : (

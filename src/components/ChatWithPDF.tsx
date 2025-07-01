@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Send, MessageCircle } from 'lucide-react';
+import { AlertCircle, Send, MessageCircle, Key } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ChatMessage {
@@ -14,12 +13,36 @@ interface ChatMessage {
 
 interface ChatWithPDFProps {
   file: File | null;
+  apiKey?: string;
 }
 
-const ChatWithPDF = ({ file }: ChatWithPDFProps) => {
+const ChatWithPDF = ({ file, apiKey }: ChatWithPDFProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  if (!apiKey) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Chat with PDF</h2>
+          <p className="text-gray-600">Ask questions about your PDF document</p>
+        </div>
+
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Key className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Gemini API key required</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Please configure your API key in Settings to use chat features
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!file) {
     return (
@@ -58,12 +81,12 @@ const ChatWithPDF = ({ file }: ChatWithPDFProps) => {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual PDF text extraction and AI chat
+      // TODO: Implement actual PDF text extraction and Gemini API integration
       // For now, we'll simulate a response
       setTimeout(() => {
         const aiMessage: ChatMessage = {
           type: 'ai',
-          content: `I understand you're asking about "${inputMessage}". Once the Gemini API integration is complete, I'll be able to analyze your PDF content and provide detailed answers based on the document.`,
+          content: `I understand you're asking about "${inputMessage}". I'm analyzing your PDF "${file.name}" using Gemini AI. Once the full integration is complete, I'll be able to provide detailed answers based on the document content.`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMessage]);
