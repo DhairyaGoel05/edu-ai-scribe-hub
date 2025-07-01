@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +9,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube, Home, Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardSidebarProps {
   activeTab: string;
@@ -28,6 +27,12 @@ const menuItems = [
 ];
 
 const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSidebarProps) => {
+  const navigate = useNavigate();
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <Sidebar className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
       <SidebarContent>
@@ -39,14 +44,11 @@ const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSideba
             <SidebarMenu>
               {/* Landing Page Button */}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link 
-                    to="/"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200"
-                  >
+                <SidebarMenuButton onClick={handleHomeClick}>
+                  <div className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 cursor-pointer">
                     <Home className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-gray-700 dark:text-gray-300">Back to Home</span>
-                  </Link>
+                  </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
