@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -184,7 +183,7 @@ const Index = () => {
                 </ul>
                 <button 
                   onClick={() => handleAuthClick('signup')}
-                  className="w-full py-3 px-6 border-2 border-blue-500 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="w-full py-3 px-6 border-2 border-blue-500 text-blue-500 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   Get Started Free
                 </button>
