@@ -58,6 +58,29 @@ export class GeminiAPIService {
     }
   }
 
+  async generateShortAnswerQuestions(text: string, count: number = 8): Promise<string[]> {
+    try {
+      const prompt = `Based on the following text, generate ${count} short answer questions that test comprehension and understanding. These should be questions that require 2-3 sentence answers. Format each question on a new line with "Q: " prefix.
+
+      Text: ${text.substring(0, 4000)}`;
+      
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const responseText = response.text();
+      
+      const questions = responseText
+        .split('\n')
+        .filter(line => line.trim().startsWith('Q:'))
+        .map(line => line.replace('Q:', '').trim())
+        .filter(q => q.length > 0);
+      
+      return questions.length > 0 ? questions : this.generateFallbackShortAnswers();
+    } catch (error) {
+      console.error('Error generating short answer questions:', error);
+      return this.generateFallbackShortAnswers();
+    }
+  }
+
   private generateFallbackMCQs(text: string): any[] {
     return [
       {
@@ -71,6 +94,16 @@ export class GeminiAPIService {
         correctAnswer: 1,
         explanation: "The document primarily focuses on educational content and learning methodologies."
       }
+    ];
+  }
+
+  private generateFallbackShortAnswers(): string[] {
+    return [
+      "What is the main purpose of this document?",
+      "Explain the key concepts discussed in the text.",
+      "How does this information relate to real-world applications?",
+      "What are the most important takeaways from this content?",
+      "Describe the methodology or approach presented in the document."
     ];
   }
 

@@ -9,13 +9,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube, Home, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube, Home, Settings, Edit3 } from 'lucide-react';
 
 interface DashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   hasApiKey: boolean;
+  onNavigateHome: () => void;
 }
 
 const menuItems = [
@@ -24,17 +24,11 @@ const menuItems = [
   { id: 'chat', label: 'Chat with PDF', icon: MessageCircle, color: 'text-purple-600 dark:text-purple-400' },
   { id: 'summary', label: 'Summary', icon: FileSpreadsheet, color: 'text-orange-600 dark:text-orange-400' },
   { id: 'mcq', label: 'Generate MCQs', icon: Brain, color: 'text-pink-600 dark:text-pink-400' },
+  { id: 'short-answer', label: 'Short Answer Questions', icon: Edit3, color: 'text-cyan-600 dark:text-cyan-400' },
   { id: 'test', label: 'Take Test', icon: TestTube, color: 'text-indigo-600 dark:text-indigo-400' },
 ];
 
-const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSidebarProps) => {
-  const navigate = useNavigate();
-
-  const handleHomeClick = () => {
-    console.log('Navigating to home...');
-    navigate('/');
-  };
-
+const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey, onNavigateHome }: DashboardSidebarProps) => {
   return (
     <Sidebar className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
       <SidebarContent>
@@ -48,7 +42,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSideba
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <button 
-                    onClick={handleHomeClick}
+                    onClick={onNavigateHome}
                     className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 cursor-pointer w-full text-left"
                   >
                     <Home className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -62,7 +56,7 @@ const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSideba
 
               {menuItems.map((item) => {
                 const isActive = activeTab === item.id;
-                const needsApiKey = ['chat', 'summary', 'mcq', 'test'].includes(item.id);
+                const needsApiKey = ['chat', 'summary', 'mcq', 'short-answer', 'test'].includes(item.id);
                 
                 return (
                   <SidebarMenuItem key={item.id}>

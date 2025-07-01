@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -9,11 +10,13 @@ import PDFViewer from '@/components/PDFViewer';
 import ChatWithPDF from '@/components/ChatWithPDF';
 import SummaryGenerator from '@/components/SummaryGenerator';
 import MCQGenerator from '@/components/MCQGenerator';
+import ShortAnswerGenerator from '@/components/ShortAnswerGenerator';
 import APIKeySetup from '@/components/APIKeySetup';
 import TakeTest from '@/components/TakeTest';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('upload');
   const [currentPDF, setCurrentPDF] = useState<File | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
@@ -30,9 +33,14 @@ const Dashboard = () => {
     setApiKey(key);
   };
 
+  const handleNavigateHome = () => {
+    console.log('Navigating to home from Dashboard...');
+    navigate('/');
+  };
+
   const renderContent = () => {
     // Show API key setup if no key is configured
-    if (!apiKey && activeTab !== 'upload') {
+    if (!apiKey && !['upload', 'viewer'].includes(activeTab)) {
       return (
         <div className="space-y-6">
           <div>
@@ -55,6 +63,8 @@ const Dashboard = () => {
         return <SummaryGenerator file={currentPDF} apiKey={apiKey} />;
       case 'mcq':
         return <MCQGenerator file={currentPDF} apiKey={apiKey} />;
+      case 'short-answer':
+        return <ShortAnswerGenerator file={currentPDF} apiKey={apiKey} />;
       case 'test':
         return <TakeTest file={currentPDF} apiKey={apiKey} />;
       case 'settings':
@@ -79,6 +89,7 @@ const Dashboard = () => {
           activeTab={activeTab} 
           onTabChange={setActiveTab}
           hasApiKey={!!apiKey}
+          onNavigateHome={handleNavigateHome}
         />
         
         <div className="flex-1 flex flex-col">

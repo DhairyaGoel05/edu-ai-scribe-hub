@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,8 @@ interface TakeTestProps {
   apiKey?: string;
 }
 
+type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
 const TakeTest = ({ file, apiKey }: TakeTestProps) => {
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -29,6 +30,7 @@ const TakeTest = ({ file, apiKey }: TakeTestProps) => {
   const [testCompleted, setTestCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [score, setScore] = useState(0);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
 
   useEffect(() => {
     if (file && apiKey) {
@@ -69,18 +71,77 @@ const TakeTest = ({ file, apiKey }: TakeTestProps) => {
     setIsLoading(true);
     try {
       const geminiService = new GeminiAPIService(apiKey!);
-      const generatedQuestions = await geminiService.generateMCQs(pdfText, 10);
+      
+      const difficultyPrompt = {
+        easy: 'Generate easy questions that test basic recall and understanding of key facts.',
+        medium: 'Generate medium difficulty questions that test comprehension and application of concepts.',
+        hard: 'Generate challenging questions that test analysis, synthesis, and critical thinking skills.'
+      };
+
+      const prompt = `Based on the following text, generate 10 multiple-choice questions with 4 options each at ${difficulty} difficulty level. ${difficultyPrompt[difficulty]}
+
+Format the response as a valid JSON array with the following structure:
+[
+  {
+    "question": "Question text here",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": 0,
+    "explanation": "Brief explanation of why this is correct"
+  }
+]
+
+Text: ${pdfText.substring(0, 4000)}`;
+      
+      const result = await geminiService.generateSummary(prompt);
+      
+      // Extract JSON from the response
+      const jsonMatch = result.match(/\[[\s\S]*\]/);
+      let generatedQuestions;
+      
+      if (jsonMatch) {
+        generatedQuestions = JSON.parse(jsonMatch[0]);
+      } else {
+        // Fallback questions based on difficulty
+        generatedQuestions = generateFallbackQuestions(difficulty);
+      }
       
       setQuestions(generatedQuestions);
       setSelectedAnswers(new Array(generatedQuestions.length).fill(-1));
       setTestStarted(true);
-      toast.success('Test generated! You have 10 minutes to complete it.');
+      toast.success(`${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} difficulty test generated! You have 10 minutes to complete it.`);
     } catch (error) {
       toast.error('Failed to generate test');
       console.error('Test generation error:', error);
+      // Use fallback questions
+      const fallbackQuestions = generateFallbackQuestions(difficulty);
+      setQuestions(fallbackQuestions);
+      setSelectedAnswers(new Array(fallbackQuestions.length).fill(-1));
+      setTestStarted(true);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateFallbackQuestions = (level: DifficultyLevel): TestQuestion[] => {
+    const baseQuestion = {
+      question: "Based on the document content, what is the main topic discussed?",
+      options: [
+        "Technical specifications",
+        "Educational content and methodology", 
+        "Business processes",
+        "Research findings"
+      ],
+      correctAnswer: 1,
+      explanation: "The document primarily focuses on educational content and learning methodologies."
+    };
+
+    if (level === 'easy') {
+      return [{ ...baseQuestion, question: "What type of document is this?" }];
+    } else if (level === 'hard') {
+      return [{ ...baseQuestion, question: "Which complex concept is most thoroughly analyzed in this document?" }];
+    }
+    
+    return [baseQuestion];
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -184,9 +245,10 @@ const TakeTest = ({ file, apiKey }: TakeTestProps) => {
               <Trophy className={`w-16 h-16 mx-auto mb-4 ${percentage >= 70 ? 'text-yellow-500' : 'text-gray-400'}`} />
               <h3 className="text-2xl font-bold mb-2">Test Completed!</h3>
               <p className="text-lg mb-4">You scored {score} out of {questions.length} questions</p>
-              <div className={`text-3xl font-bold mb-6 ${percentage >= 70 ? 'text-green-600' : percentage >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <div className={`text-3xl font-bold mb-2 ${percentage >= 70 ? 'text-green-600' : percentage >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
                 {percentage}%
               </div>
+              <p className="text-sm text-gray-500 mb-6">Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</p>
               <Button onClick={() => {
                 setTestCompleted(false);
                 setTestStarted(false);
@@ -230,25 +292,53 @@ const TakeTest = ({ file, apiKey }: TakeTestProps) => {
         </CardHeader>
         <CardContent>
           {!testStarted ? (
-            <div className="text-center py-8">
-              <Button 
-                onClick={generateTest} 
-                disabled={isLoading || !pdfText}
-                size="lg"
-                className="mb-4"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Test...
-                  </>
-                ) : (
-                  'Start Test'
-                )}
-              </Button>
-              <p className="text-gray-500 text-sm">
-                {pdfText ? 'Click to start a 10-minute timed test with 10 questions' : 'Analyzing PDF, please wait...'}
-              </p>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Select Difficulty Level:
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+                  {(['easy', 'medium', 'hard'] as DifficultyLevel[]).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setDifficulty(level)}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        difficulty === level
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium capitalize">{level}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {level === 'easy' && 'Basic recall and facts'}
+                        {level === 'medium' && 'Comprehension and application'}
+                        {level === 'hard' && 'Analysis and critical thinking'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="text-center py-8">
+                <Button 
+                  onClick={generateTest} 
+                  disabled={isLoading || !pdfText}
+                  size="lg"
+                  className="mb-4"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Test...
+                    </>
+                  ) : (
+                    `Start ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Test`
+                  )}
+                </Button>
+                <p className="text-gray-500 text-sm">
+                  {pdfText ? 'Click to start a 10-minute timed test with 10 questions' : 'Analyzing PDF, please wait...'}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-6">
