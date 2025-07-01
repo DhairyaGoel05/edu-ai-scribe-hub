@@ -14,6 +14,7 @@ import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube } fro
 interface DashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  hasApiKey: boolean;
 }
 
 const menuItems = [
@@ -25,7 +26,7 @@ const menuItems = [
   { id: 'test', label: 'Take Test', icon: TestTube },
 ];
 
-const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => {
+const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey }: DashboardSidebarProps) => {
   return (
     <Sidebar className="w-64">
       <SidebarContent>
