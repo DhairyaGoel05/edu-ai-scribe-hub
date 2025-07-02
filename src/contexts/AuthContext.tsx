@@ -11,6 +11,8 @@ interface UserProfile {
   age?: number;
   role: 'student' | 'instructor';
   avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthContextType {

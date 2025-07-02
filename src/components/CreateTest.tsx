@@ -18,6 +18,7 @@ interface Question {
   options?: string[];
   correct_answer: string;
   points: number;
+  [key: string]: any; // Index signature to make it compatible with Json type
 }
 
 const CreateTest = () => {
@@ -75,7 +76,7 @@ const CreateTest = () => {
           instructor_id: profile.id,
           title: testData.title,
           description: testData.description,
-          questions: questions,
+          questions: questions as any, // Cast to any to satisfy Json type
           show_answers_after_attempt: testData.show_answers_after_attempt,
         })
         .select()
