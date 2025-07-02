@@ -50,10 +50,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    }
+  };
+
+  const createProfile = async (userId: string, userData: { name: string; phone: string; age: number; role: 'student' | 'instructor' }, email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          full_name: userData.name,
+          phone_number: userData.phone,
+          age: userData.age,
+          role: userData.role
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        throw error;
+      }
+      
+      setProfile(data);
+      return data;
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      throw error;
     }
   };
 
@@ -61,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -111,23 +143,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, userData: { name: string; phone: string; age: number; role: 'student' | 'instructor' }) => {
     setLoading(true);
     try {
+      console.log('Starting signup process with data:', { email, userData });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: userData.name,
-            phone_number: userData.phone,
-            age: userData.age,
-            role: userData.role,
-          }
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Signup auth error:', error);
+        throw error;
+      }
+      
       if (data.user) {
-        await fetchProfile(data.user.id);
+        console.log('User created, creating profile...');
+        // Create profile manually since the trigger might not be working
+        await createProfile(data.user.id, userData, email);
       }
     } catch (error) {
       console.error('Signup error:', error);
