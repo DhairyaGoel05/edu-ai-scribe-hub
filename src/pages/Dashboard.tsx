@@ -13,9 +13,10 @@ import MCQGenerator from '@/components/MCQGenerator';
 import ShortAnswerGenerator from '@/components/ShortAnswerGenerator';
 import APIKeySetup from '@/components/APIKeySetup';
 import TakeTest from '@/components/TakeTest';
+import CreateTest from '@/components/CreateTest';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('upload');
   const [currentPDF, setCurrentPDF] = useState<File | null>(null);
@@ -27,7 +28,12 @@ const Dashboard = () => {
     if (savedKey) {
       setApiKey(savedKey);
     }
-  }, []);
+
+    // Set default tab based on user role
+    if (profile?.role === 'instructor') {
+      setActiveTab('create-test');
+    }
+  }, [profile]);
 
   const handleApiKeyConfigured = (key: string) => {
     setApiKey(key);
@@ -39,8 +45,8 @@ const Dashboard = () => {
   };
 
   const renderContent = () => {
-    // Show API key setup if no key is configured
-    if (!apiKey && !['upload', 'viewer'].includes(activeTab)) {
+    // Show API key setup if no key is configured for AI features
+    if (!apiKey && !['upload', 'viewer', 'create-test', 'manage-tests', 'student-results'].includes(activeTab)) {
       return (
         <div className="space-y-6">
           <div>
@@ -67,6 +73,32 @@ const Dashboard = () => {
         return <ShortAnswerGenerator file={currentPDF} apiKey={apiKey} />;
       case 'test':
         return <TakeTest file={currentPDF} apiKey={apiKey} />;
+      case 'create-test':
+        return <CreateTest />;
+      case 'manage-tests':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Manage Tests</h2>
+              <p className="text-gray-600 dark:text-gray-300">View and manage your created tests</p>
+            </div>
+            <div className="text-center py-8 text-gray-500">
+              Test management features coming soon...
+            </div>
+          </div>
+        );
+      case 'student-results':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Student Results</h2>
+              <p className="text-gray-600 dark:text-gray-300">View student performance and results</p>
+            </div>
+            <div className="text-center py-8 text-gray-500">
+              Student results features coming soon...
+            </div>
+          </div>
+        );
       case 'settings':
         return (
           <div className="space-y-6">
@@ -90,6 +122,7 @@ const Dashboard = () => {
           onTabChange={setActiveTab}
           hasApiKey={!!apiKey}
           onNavigateHome={handleNavigateHome}
+          userRole={profile?.role || 'student'}
         />
         
         <div className="flex-1 flex flex-col">

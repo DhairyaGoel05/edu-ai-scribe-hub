@@ -1,9 +1,7 @@
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -21,98 +18,33 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, mode, onToggleMode }: AuthModalProps) => {
-  const { login, signup, loading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      if (mode === 'login') {
-        await login(email, password);
-        toast.success('Welcome back!');
-      } else {
-        await signup(email, password, name);
-        toast.success('Account created successfully!');
-      }
-      onClose();
-    } catch (error) {
-      toast.error(mode === 'login' ? 'Login failed' : 'Signup failed');
-    }
+  const handleRedirect = () => {
+    onClose();
+    navigate('/auth');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-          </DialogTitle>
+          <DialogTitle>Authentication</DialogTitle>
           <DialogDescription>
-            {mode === 'login' 
-              ? 'Sign in to your account to continue' 
-              : 'Create a new account to get started'
-            }
+            Please use our new authentication page for a better experience.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
+        <div className="space-y-4">
+          <p className="text-center text-gray-600">
+            We've moved authentication to a dedicated page with role selection for students and instructors.
+          </p>
+          
           <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={loading}
+            onClick={handleRedirect}
+            className="w-full"
           >
-            {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
-          </Button>
-        </form>
-
-        <div className="text-center">
-          <Button
-            variant="link"
-            onClick={onToggleMode}
-            className="text-sm"
-          >
-            {mode === 'login' 
-              ? "Don't have an account? Sign up" 
-              : 'Already have an account? Sign in'
-            }
+            Go to Authentication Page
           </Button>
         </div>
       </DialogContent>

@@ -1,24 +1,21 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Hero3D from '@/components/Hero3D';
-import AuthModal from '@/components/AuthModal';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
 const Index = () => {
   const { user } = useAuth();
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const navigate = useNavigate();
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setIsAuthModalOpen(true);
+    navigate('/auth');
   };
 
   const features = [
@@ -238,13 +235,6 @@ const Index = () => {
 
         <Footer />
       </div>
-
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        mode={authMode}
-        onToggleMode={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-      />
     </div>
   );
 };

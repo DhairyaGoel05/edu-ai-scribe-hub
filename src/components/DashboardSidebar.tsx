@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -8,16 +9,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube, Home, Settings, Edit3 } from 'lucide-react';
+import { Upload, FileText, MessageCircle, FileSpreadsheet, Brain, TestTube, Home, Settings, Edit3, Plus, Users, BarChart } from 'lucide-react';
 
 interface DashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   hasApiKey: boolean;
   onNavigateHome: () => void;
+  userRole: 'student' | 'instructor';
 }
 
-const menuItems = [
+const studentMenuItems = [
   { id: 'upload', label: 'Upload PDF', icon: Upload, color: 'text-blue-600 dark:text-blue-400' },
   { id: 'viewer', label: 'PDF Viewer', icon: FileText, color: 'text-green-600 dark:text-green-400' },
   { id: 'chat', label: 'Chat with PDF', icon: MessageCircle, color: 'text-purple-600 dark:text-purple-400' },
@@ -27,13 +29,27 @@ const menuItems = [
   { id: 'test', label: 'Take Test', icon: TestTube, color: 'text-indigo-600 dark:text-indigo-400' },
 ];
 
-const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey, onNavigateHome }: DashboardSidebarProps) => {
+const instructorMenuItems = [
+  { id: 'upload', label: 'Upload PDF', icon: Upload, color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'viewer', label: 'PDF Viewer', icon: FileText, color: 'text-green-600 dark:text-green-400' },
+  { id: 'chat', label: 'Chat with PDF', icon: MessageCircle, color: 'text-purple-600 dark:text-purple-400' },
+  { id: 'summary', label: 'Summary', icon: FileSpreadsheet, color: 'text-orange-600 dark:text-orange-400' },
+  { id: 'mcq', label: 'Generate MCQs', icon: Brain, color: 'text-pink-600 dark:text-pink-400' },
+  { id: 'short-answer', label: 'Short Answer Questions', icon: Edit3, color: 'text-cyan-600 dark:text-cyan-400' },
+  { id: 'create-test', label: 'Create Test', icon: Plus, color: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'manage-tests', label: 'Manage Tests', icon: TestTube, color: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'student-results', label: 'Student Results', icon: BarChart, color: 'text-red-600 dark:text-red-400' },
+];
+
+const DashboardSidebar = ({ activeTab, onTabChange, hasApiKey, onNavigateHome, userRole }: DashboardSidebarProps) => {
+  const menuItems = userRole === 'instructor' ? instructorMenuItems : studentMenuItems;
+
   return (
     <Sidebar className="w-64 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-700 dark:text-gray-300 font-semibold">
-            AI PDF Assistant
+            AI PDF Assistant - {userRole === 'instructor' ? 'Instructor' : 'Student'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
