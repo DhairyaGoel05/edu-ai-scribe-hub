@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, Sparkles, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { GeminiAPIService } from '@/services/geminiApiService';
 
 interface Question {
   id: string;
@@ -43,6 +44,16 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
   });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const [aiGenerationData, setAiGenerationData] = useState({
+    topic: '',
+    questionCount: 5,
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+    questionTypes: 'mixed' as 'mcq' | 'short_answer' | 'mixed'
+  });
+  const [isGeneratingTest, setIsGeneratingTest] = useState(false);
+
+  // Get API key from localStorage
+  const apiKey = localStorage.getItem('gemini_api_key');
 
   useEffect(() => {
     if (editingTest) {
@@ -54,6 +65,86 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
       setQuestions(editingTest.questions);
     }
   }, [editingTest]);
+
+  const generateAITest = async () => {
+    if (!apiKey) {
+      toast.error('Please configure your Gemini API key in Settings first');
+      return;
+    }
+
+    if (!aiGenerationData.topic.trim()) {
+      toast.error('Please enter a topic for the test');
+      return;
+    }
+
+    setIsGeneratingTest(true);
+    try {
+      const geminiService = new GeminiAPIService(apiKey);
+      
+      const prompt = `Generate a ${aiGenerationData.difficulty} level test on the topic: "${aiGenerationData.topic}"
+      
+      Requirements:
+      - Create exactly ${aiGenerationData.questionCount} questions
+      - Question types: ${aiGenerationData.questionTypes === 'mixed' ? 'mix of multiple choice and short answer' : aiGenerationData.questionTypes}
+      - For multiple choice questions, provide exactly 4 options
+      - Include the correct answer for each question
+      - Each question should be worth 1 point
+      
+      Please return the response in this exact JSON format:
+      {
+        "title": "Test title based on topic",
+        "description": "Brief description of the test",
+        "questions": [
+          {
+            "type": "mcq" or "short_answer",
+            "question": "Question text",
+            "options": ["A", "B", "C", "D"] (only for MCQ),
+            "correct_answer": "Correct answer",
+            "points": 1
+          }
+        ]
+      }
+      
+      Return only valid JSON, no additional text.`;
+
+      const response = await geminiService.generateContent(prompt);
+      
+      try {
+        const cleanResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const generatedTest = JSON.parse(cleanResponse);
+        
+        if (generatedTest.title && generatedTest.questions && Array.isArray(generatedTest.questions)) {
+          setTestData({
+            title: generatedTest.title,
+            description: generatedTest.description || '',
+            show_answers_after_attempt: false,
+          });
+          
+          const processedQuestions = generatedTest.questions.map((q: any, index: number) => ({
+            id: (Date.now() + index).toString(),
+            type: q.type || 'mcq',
+            question: q.question || '',
+            options: q.options || (q.type === 'mcq' ? ['', '', '', ''] : undefined),
+            correct_answer: q.correct_answer || '',
+            points: q.points || 1,
+          }));
+          
+          setQuestions(processedQuestions);
+          toast.success('AI test generated successfully!');
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        toast.error('Failed to parse AI response. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating AI test:', error);
+      toast.error('Failed to generate AI test');
+    } finally {
+      setIsGeneratingTest(false);
+    }
+  };
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -150,6 +241,83 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
         <p className="text-gray-600 dark:text-gray-300">Design a custom test for your students</p>
       </div>
 
+      {/* AI Test Generation */}
+      {!editingTest && apiKey && (
+        <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-purple-700 dark:text-purple-300">
+              <Sparkles className="w-5 h-5" />
+              <span>AI Test Generator</span>
+            </CardTitle>
+            <CardDescription>Generate a complete test using AI based on your topic</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="ai-topic">Topic/Subject *</Label>
+                <Input
+                  id="ai-topic"
+                  value={aiGenerationData.topic}
+                  onChange={(e) => setAiGenerationData({ ...aiGenerationData, topic: e.target.value })}
+                  placeholder="e.g., World War II, Calculus, Biology"
+                  className="bg-white dark:bg-gray-800"
+                />
+              </div>
+              <div>
+                <Label htmlFor="ai-count">Number of Questions</Label>
+                <select
+                  id="ai-count"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600"
+                  value={aiGenerationData.questionCount}
+                  onChange={(e) => setAiGenerationData({ ...aiGenerationData, questionCount: parseInt(e.target.value) })}
+                >
+                  <option value={3}>3 Questions</option>
+                  <option value={5}>5 Questions</option>
+                  <option value={10}>10 Questions</option>
+                  <option value={15}>15 Questions</option>
+                  <option value={20}>20 Questions</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="ai-difficulty">Difficulty Level</Label>
+                <select
+                  id="ai-difficulty"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600"
+                  value={aiGenerationData.difficulty}
+                  onChange={(e) => setAiGenerationData({ ...aiGenerationData, difficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="ai-types">Question Types</Label>
+                <select
+                  id="ai-types"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600"
+                  value={aiGenerationData.questionTypes}
+                  onChange={(e) => setAiGenerationData({ ...aiGenerationData, questionTypes: e.target.value as 'mcq' | 'short_answer' | 'mixed' })}
+                >
+                  <option value="mixed">Mixed (MCQ + Short Answer)</option>
+                  <option value="mcq">Multiple Choice Only</option>
+                  <option value="short_answer">Short Answer Only</option>
+                </select>
+              </div>
+            </div>
+            
+            <Button
+              onClick={generateAITest}
+              disabled={isGeneratingTest || !aiGenerationData.topic.trim()}
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+            >
+              <Wand2 className="w-4 h-4 mr-2" />
+              {isGeneratingTest ? 'Generating Test...' : 'Generate AI Test'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Test Information</CardTitle>
@@ -163,6 +331,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
               value={testData.title}
               onChange={(e) => setTestData({ ...testData, title: e.target.value })}
               placeholder="Enter test title"
+              className="dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
           
@@ -173,6 +342,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
               value={testData.description}
               onChange={(e) => setTestData({ ...testData, description: e.target.value })}
               placeholder="Enter test description (optional)"
+              className="dark:bg-gray-700 dark:border-gray-600"
             />
           </div>
 
@@ -182,7 +352,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
               checked={testData.show_answers_after_attempt}
               onCheckedChange={(checked) => setTestData({ ...testData, show_answers_after_attempt: checked })}
             />
-            <Label htmlFor="show-answers">Show answers to students after attempt</Label>
+            <Label htmlFor="show-answers" className="dark:text-gray-200">Show answers to students after attempt</Label>
           </div>
         </CardContent>
       </Card>
@@ -194,7 +364,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
               <CardTitle>Questions</CardTitle>
               <CardDescription>Add questions to your test</CardDescription>
             </div>
-            <Button onClick={addQuestion}>
+            <Button onClick={addQuestion} variant="outline">
               <Plus className="w-4 h-4 mr-2" />
               Add Question
             </Button>
@@ -202,10 +372,10 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
         </CardHeader>
         <CardContent className="space-y-6">
           {questions.map((question, index) => (
-            <Card key={question.id} className="border-l-4 border-l-blue-500">
+            <Card key={question.id} className="border-l-4 border-l-blue-500 dark:bg-gray-800">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-4">
-                  <h4 className="text-lg font-semibold">Question {index + 1}</h4>
+                  <h4 className="text-lg font-semibold dark:text-white">Question {index + 1}</h4>
                   <Button
                     variant="destructive"
                     size="sm"
@@ -217,19 +387,20 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
 
                 <div className="space-y-4">
                   <div>
-                    <Label>Question Text *</Label>
+                    <Label className="dark:text-gray-200">Question Text *</Label>
                     <Textarea
                       value={question.question}
                       onChange={(e) => updateQuestion(question.id, { question: e.target.value })}
                       placeholder="Enter your question"
+                      className="dark:bg-gray-700 dark:border-gray-600"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Question Type</Label>
+                      <Label className="dark:text-gray-200">Question Type</Label>
                       <select
-                        className="w-full p-2 border rounded"
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         value={question.type}
                         onChange={(e) => updateQuestion(question.id, { 
                           type: e.target.value as 'mcq' | 'short_answer',
@@ -241,19 +412,20 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
                       </select>
                     </div>
                     <div>
-                      <Label>Points</Label>
+                      <Label className="dark:text-gray-200">Points</Label>
                       <Input
                         type="number"
                         min="1"
                         value={question.points}
                         onChange={(e) => updateQuestion(question.id, { points: parseInt(e.target.value) || 1 })}
+                        className="dark:bg-gray-700 dark:border-gray-600"
                       />
                     </div>
                   </div>
 
                   {question.type === 'mcq' && question.options && (
                     <div>
-                      <Label>Options</Label>
+                      <Label className="dark:text-gray-200">Options</Label>
                       <div className="space-y-2">
                         {question.options.map((option, optionIndex) => (
                           <div key={optionIndex} className="flex items-center space-x-2">
@@ -261,6 +433,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
                               value={option}
                               onChange={(e) => updateOption(question.id, optionIndex, e.target.value)}
                               placeholder={`Option ${optionIndex + 1}`}
+                              className="dark:bg-gray-700 dark:border-gray-600"
                             />
                             <input
                               type="radio"
@@ -268,7 +441,7 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
                               checked={question.correct_answer === option}
                               onChange={() => updateQuestion(question.id, { correct_answer: option })}
                             />
-                            <Label className="text-sm">Correct</Label>
+                            <Label className="text-sm dark:text-gray-200">Correct</Label>
                           </div>
                         ))}
                       </div>
@@ -277,11 +450,12 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
 
                   {question.type === 'short_answer' && (
                     <div>
-                      <Label>Correct Answer *</Label>
+                      <Label className="dark:text-gray-200">Correct Answer *</Label>
                       <Input
                         value={question.correct_answer}
                         onChange={(e) => updateQuestion(question.id, { correct_answer: e.target.value })}
                         placeholder="Enter the correct answer"
+                        className="dark:bg-gray-700 dark:border-gray-600"
                       />
                     </div>
                   )}
@@ -291,8 +465,8 @@ const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
           ))}
 
           {questions.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No questions added yet. Click "Add Question" to get started.
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No questions added yet. Click "Add Question" to get started or use AI to generate a complete test.
             </div>
           )}
         </CardContent>

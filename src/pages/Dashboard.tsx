@@ -69,7 +69,7 @@ const Dashboard = () => {
       case 'upload':
         return <UploadPDF onPDFUpload={setCurrentPDF} />;
       case 'viewer':
-        return <PDFViewer file={currentPDF} />;
+        return <PDFViewer file={currentPDF} apiKey={apiKey} />;
       case 'chat':
         return <ChatWithPDF file={currentPDF} apiKey={apiKey} />;
       case 'summary':
