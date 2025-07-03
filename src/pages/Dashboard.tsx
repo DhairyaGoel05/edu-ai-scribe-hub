@@ -14,6 +14,7 @@ import ShortAnswerGenerator from '@/components/ShortAnswerGenerator';
 import APIKeySetup from '@/components/APIKeySetup';
 import TakeTest from '@/components/TakeTest';
 import CreateTest from '@/components/CreateTest';
+import ManageTests from '@/components/ManageTests';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('upload');
   const [currentPDF, setCurrentPDF] = useState<File | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [editingTest, setEditingTest] = useState<any>(null);
 
   useEffect(() => {
     // Load API key from localStorage on component mount
@@ -42,6 +44,11 @@ const Dashboard = () => {
   const handleNavigateHome = () => {
     console.log('Navigating to home from Dashboard...');
     navigate('/');
+  };
+
+  const handleEditTest = (test: any) => {
+    setEditingTest(test);
+    setActiveTab('create-test');
   };
 
   const renderContent = () => {
@@ -74,19 +81,9 @@ const Dashboard = () => {
       case 'test':
         return <TakeTest file={currentPDF} apiKey={apiKey} />;
       case 'create-test':
-        return <CreateTest />;
+        return <CreateTest key={editingTest?.id || 'new'} editingTest={editingTest} onTestSaved={() => setEditingTest(null)} />;
       case 'manage-tests':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Manage Tests</h2>
-              <p className="text-gray-600 dark:text-gray-300">View and manage your created tests</p>
-            </div>
-            <div className="text-center py-8 text-gray-500">
-              Test management features coming soon...
-            </div>
-          </div>
-        );
+        return <ManageTests onEditTest={handleEditTest} />;
       case 'student-results':
         return (
           <div className="space-y-6">

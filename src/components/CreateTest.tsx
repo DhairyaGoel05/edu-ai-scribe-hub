@@ -7,8 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Save } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Plus, Trash2, Save, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Question {
@@ -18,7 +17,16 @@ interface Question {
   options?: string[];
   correct_answer: string;
   points: number;
-  [key: string]: any; // Index signature to make it compatible with Json type
+}
+
+interface Test {
+  id: string;
+  title: string;
+  description: string;
+  questions: Question[];
+  show_answers_after_attempt: boolean;
+  instructor_id: string;
+  created_at: string;
 }
 
 const CreateTest = () => {
@@ -30,6 +38,7 @@ const CreateTest = () => {
   });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingTest, setEditingTest] = useState<Test | null>(null);
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -70,21 +79,33 @@ const CreateTest = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('tests')
-        .insert({
-          instructor_id: profile.id,
-          title: testData.title,
-          description: testData.description,
-          questions: questions as any, // Cast to any to satisfy Json type
-          show_answers_after_attempt: testData.show_answers_after_attempt,
-        })
-        .select()
-        .single();
+      const test: Test = {
+        id: editingTest?.id || Date.now().toString(),
+        title: testData.title,
+        description: testData.description,
+        questions: questions,
+        show_answers_after_attempt: testData.show_answers_after_attempt,
+        instructor_id: profile.id,
+        created_at: editingTest?.created_at || new Date().toISOString(),
+      };
 
-      if (error) throw error;
+      // Get existing tests
+      const tests = JSON.parse(localStorage.getItem('tests') || '[]');
+      
+      if (editingTest) {
+        // Update existing test
+        const testIndex = tests.findIndex((t: Test) => t.id === editingTest.id);
+        if (testIndex !== -1) {
+          tests[testIndex] = test;
+        }
+        toast.success('Test updated successfully!');
+      } else {
+        // Add new test
+        tests.push(test);
+        toast.success('Test created successfully!');
+      }
 
-      toast.success('Test created successfully!');
+      localStorage.setItem('tests', JSON.stringify(tests));
       
       // Reset form
       setTestData({
@@ -93,17 +114,30 @@ const CreateTest = () => {
         show_answers_after_attempt: false,
       });
       setQuestions([]);
+      setEditingTest(null);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create test');
+      toast.error(error.message || 'Failed to save test');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadTestForEditing = (test: Test) => {
+    setEditingTest(test);
+    setTestData({
+      title: test.title,
+      description: test.description,
+      show_answers_after_attempt: test.show_answers_after_attempt,
+    });
+    setQuestions(test.questions);
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Create New Test</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          {editingTest ? 'Edit Test' : 'Create New Test'}
+        </h2>
         <p className="text-gray-600 dark:text-gray-300">Design a custom test for your students</p>
       </div>
 
@@ -255,10 +289,19 @@ const CreateTest = () => {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end space-x-2">
+        {editingTest && (
+          <Button variant="outline" onClick={() => {
+            setEditingTest(null);
+            setTestData({ title: '', description: '', show_answers_after_attempt: false });
+            setQuestions([]);
+          }}>
+            Cancel Edit
+          </Button>
+        )}
         <Button onClick={saveTest} disabled={loading} size="lg">
           <Save className="w-4 h-4 mr-2" />
-          {loading ? 'Creating Test...' : 'Create Test'}
+          {loading ? 'Saving Test...' : editingTest ? 'Update Test' : 'Create Test'}
         </Button>
       </div>
     </div>

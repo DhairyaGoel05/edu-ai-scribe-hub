@@ -196,7 +196,7 @@ const Profile = () => {
                     <div>
                       <Label>Member Since</Label>
                       <p className="text-gray-900 font-medium">
-                        {new Date(profile.created_at || '').toLocaleDateString()}
+                        {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                   </div>
