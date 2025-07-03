@@ -1,11 +1,12 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, AlertCircle, BookOpen, ChevronRight, Sparkles, Key } from 'lucide-react';
+import { FileText, AlertCircle, BookOpen, ChevronRight, Sparkles, Key, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { GeminiAPIService } from '@/services/geminiApiService';
 import { toast } from 'sonner';
+import APIKeySetup from './APIKeySetup';
 
 interface PDFViewerProps {
   file: File | null;
@@ -25,7 +26,7 @@ interface AIGeneratedIndex {
   summary?: string;
 }
 
-const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
+const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [outline, setOutline] = useState<PDFOutlineItem[]>([]);
   const [aiIndex, setAiIndex] = useState<AIGeneratedIndex[]>([]);
@@ -33,8 +34,20 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
   const [totalPages, setTotalPages] = useState(0);
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [isGeneratingIndex, setIsGeneratingIndex] = useState(false);
+  const [showApiKeySetup, setShowApiKeySetup] = useState(false);
+  const [apiKey, setApiKey] = useState<string>('');
   
   console.log('PDFViewer received file:', file);
+
+  useEffect(() => {
+    // Load API key from localStorage
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) {
+      setApiKey(savedKey);
+    } else if (propApiKey) {
+      setApiKey(propApiKey);
+    }
+  }, [propApiKey]);
 
   useEffect(() => {
     if (file) {
@@ -103,9 +116,19 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
     return processedItem;
   };
 
+  const handleApiKeyConfigured = (key: string) => {
+    setApiKey(key);
+    setShowApiKeySetup(false);
+    toast.success('API key configured successfully!');
+  };
+
   const generateAIIndex = async () => {
     if (!file || !apiKey || !pdfDocument) {
-      toast.error('PDF file and API key are required');
+      if (!apiKey) {
+        setShowApiKeySetup(true);
+        return;
+      }
+      toast.error('PDF file is required');
       return;
     }
 
@@ -241,6 +264,23 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
     );
   }
 
+  if (showApiKeySetup) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">API Key Setup</h2>
+            <p className="text-gray-600 dark:text-gray-300">Configure your Gemini API key to use AI features</p>
+          </div>
+          <Button variant="outline" onClick={() => setShowApiKeySetup(false)}>
+            Back to PDF Viewer
+          </Button>
+        </div>
+        <APIKeySetup onKeyConfigured={handleApiKeyConfigured} currentKey={apiKey} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -248,7 +288,14 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">PDF Viewer</h2>
           <p className="text-gray-600 dark:text-gray-300">Currently viewing: {file.name}</p>
         </div>
-        {apiKey && (
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowApiKeySetup(true)}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            API Settings
+          </Button>
           <Button
             onClick={generateAIIndex}
             disabled={isGeneratingIndex}
@@ -257,7 +304,7 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
             <Sparkles className="w-4 h-4 mr-2" />
             {isGeneratingIndex ? 'Generating...' : 'Generate AI Index'}
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -275,7 +322,7 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
               {!apiKey && (
                 <div className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                   <Key className="w-3 h-3 inline mr-1" />
-                  Add API key to generate AI index
+                  Configure API key to generate AI index
                 </div>
               )}
             </CardHeader>
@@ -321,14 +368,19 @@ const PDFViewer = ({ file, apiKey }: PDFViewerProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-[600px] border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
-              {pdfUrl && (
+            <div className="w-full h-[600px] border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+              {pdfUrl ? (
                 <iframe
-                  src={pdfUrl}
-                  className="w-full h-full"
+                  src={`${pdfUrl}#page=${currentPage}&toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
+                  className="w-full h-full border-0"
                   title="PDF Viewer"
                   onLoad={() => console.log('PDF loaded successfully')}
                 />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  <FileText className="w-16 h-16 mb-4" />
+                  <p>Loading PDF...</p>
+                </div>
               )}
             </div>
             
