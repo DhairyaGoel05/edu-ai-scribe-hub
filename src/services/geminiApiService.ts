@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export class GeminiAPIService {
@@ -9,6 +8,17 @@ export class GeminiAPIService {
     this.genAI = new GoogleGenerativeAI(apiKey);
     // Updated to use the correct model name
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  }
+
+  async generateContent(prompt: string): Promise<string> {
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Error generating content:', error);
+      throw new Error('Failed to generate content');
+    }
   }
 
   async generateSummary(text: string): Promise<string> {
