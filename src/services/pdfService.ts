@@ -1,8 +1,8 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set worker source
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker source - using a more reliable CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 export class PDFService {
   static async extractTextFromPDF(file: File): Promise<string> {
@@ -25,6 +25,33 @@ export class PDFService {
     } catch (error) {
       console.error('Error extracting text from PDF:', error);
       throw new Error('Failed to extract text from PDF');
+    }
+  }
+
+  static async renderPDFToCanvas(file: File, pageNumber: number = 1): Promise<string> {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(pageNumber);
+      
+      const scale = 1.5;
+      const viewport = page.getViewport({ scale });
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      const renderContext = {
+        canvasContext: context!,
+        viewport: viewport
+      };
+      
+      await page.render(renderContext).promise;
+      return canvas.toDataURL();
+    } catch (error) {
+      console.error('Error rendering PDF to canvas:', error);
+      throw new Error('Failed to render PDF');
     }
   }
 }

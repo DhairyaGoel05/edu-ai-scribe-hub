@@ -1,12 +1,14 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, AlertCircle, BookOpen, ChevronRight, Sparkles, Key, Settings } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { FileText, AlertCircle, BookOpen, ChevronRight, Sparkles, Key, Settings, ChevronLeft, ZoomIn, ZoomOut } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { GeminiAPIService } from '@/services/geminiApiService';
 import { toast } from 'sonner';
 import APIKeySetup from './APIKeySetup';
+
+// Set PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
 
 interface PDFViewerProps {
   file: File | null;
@@ -27,7 +29,6 @@ interface AIGeneratedIndex {
 }
 
 const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
-  const [pdfUrl, setPdfUrl] = useState<string>('');
   const [outline, setOutline] = useState<PDFOutlineItem[]>([]);
   const [aiIndex, setAiIndex] = useState<AIGeneratedIndex[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,6 +37,9 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
   const [isGeneratingIndex, setIsGeneratingIndex] = useState(false);
   const [showApiKeySetup, setShowApiKeySetup] = useState(false);
   const [apiKey, setApiKey] = useState<string>('');
+  const [scale, setScale] = useState(1.5);
+  const [isLoading, setIsLoading] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   
   console.log('PDFViewer received file:', file);
 
@@ -51,37 +55,74 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
 
   useEffect(() => {
     if (file) {
-      const url = URL.createObjectURL(file);
-      setPdfUrl(url);
-      console.log('Created PDF URL:', url);
-      
-      // Load PDF document for outline extraction
+      console.log('Loading PDF file:', file.name);
       loadPDFDocument(file);
-      
-      // Cleanup function to revoke URL
-      return () => {
-        URL.revokeObjectURL(url);
-      };
     }
   }, [file]);
 
+  useEffect(() => {
+    if (pdfDocument && canvasRef.current) {
+      renderPage(currentPage);
+    }
+  }, [pdfDocument, currentPage, scale]);
+
   const loadPDFDocument = async (file: File) => {
+    setIsLoading(true);
     try {
       const arrayBuffer = await file.arrayBuffer();
+      console.log('PDF arrayBuffer size:', arrayBuffer.byteLength);
+      
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      console.log('PDF loaded successfully, pages:', pdf.numPages);
+      
       setPdfDocument(pdf);
       setTotalPages(pdf.numPages);
+      setCurrentPage(1);
       
       // Extract outline/bookmarks
-      const outline = await pdf.getOutline();
-      if (outline) {
-        const processedOutline = await Promise.all(
-          outline.map(item => processOutlineItem(item, pdf))
-        );
-        setOutline(processedOutline);
+      try {
+        const outline = await pdf.getOutline();
+        if (outline) {
+          const processedOutline = await Promise.all(
+            outline.map(item => processOutlineItem(item, pdf))
+          );
+          setOutline(processedOutline);
+        }
+      } catch (outlineError) {
+        console.warn('Could not load PDF outline:', outlineError);
       }
     } catch (error) {
       console.error('Error loading PDF document:', error);
+      toast.error('Failed to load PDF document');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderPage = async (pageNumber: number) => {
+    if (!pdfDocument || !canvasRef.current) return;
+    
+    try {
+      const page = await pdfDocument.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      
+      console.log('Rendering page:', pageNumber);
+      await page.render(renderContext).promise;
+      console.log('Page rendered successfully');
+    } catch (error) {
+      console.error('Error rendering page:', error);
+      toast.error('Failed to render PDF page');
     }
   };
 
@@ -193,13 +234,16 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
   };
 
   const navigateToPage = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-    if (iframe) {
-      // Update the PDF URL to include page number
-      const newUrl = `${pdfUrl}#page=${pageNumber}`;
-      iframe.src = newUrl;
-    }
+    const targetPage = Math.min(Math.max(1, pageNumber), totalPages);
+    setCurrentPage(targetPage);
+  };
+
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.25, 0.5));
   };
 
   const renderOutlineItem = (item: PDFOutlineItem, level = 0) => (
@@ -368,18 +412,44 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-[600px] border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-              {pdfUrl ? (
-                <iframe
-                  src={`${pdfUrl}#page=${currentPage}&toolbar=1&navpanes=0&scrollbar=1&view=FitH`}
-                  className="w-full h-full border-0"
-                  title="PDF Viewer"
-                  onLoad={() => console.log('PDF loaded successfully')}
-                />
+            <div className="w-full border rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-[600px] text-gray-500 dark:text-gray-400">
+                  <div className="text-center">
+                    <FileText className="w-16 h-16 mb-4 mx-auto animate-pulse" />
+                    <p>Loading PDF...</p>
+                  </div>
+                </div>
+              ) : pdfDocument ? (
+                <div className="flex flex-col">
+                  {/* Zoom Controls */}
+                  <div className="flex items-center justify-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800 border-b">
+                    <Button variant="outline" size="sm" onClick={handleZoomOut}>
+                      <ZoomOut className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {Math.round(scale * 100)}%
+                    </span>
+                    <Button variant="outline" size="sm" onClick={handleZoomIn}>
+                      <ZoomIn className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* PDF Canvas */}
+                  <div className="flex justify-center p-4 overflow-auto max-h-[600px]">
+                    <canvas 
+                      ref={canvasRef}
+                      className="border shadow-lg"
+                      style={{ maxWidth: '100%', height: 'auto' }}
+                    />
+                  </div>
+                </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                  <FileText className="w-16 h-16 mb-4" />
-                  <p>Loading PDF...</p>
+                <div className="flex items-center justify-center h-[600px] text-gray-500 dark:text-gray-400">
+                  <div className="text-center">
+                    <AlertCircle className="w-16 h-16 mb-4 mx-auto" />
+                    <p>Failed to load PDF</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -390,9 +460,10 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigateToPage(Math.max(1, currentPage - 1))}
+                  onClick={() => navigateToPage(currentPage - 1)}
                   disabled={currentPage <= 1}
                 >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
                   Previous
                 </Button>
                 <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -401,10 +472,11 @@ const PDFViewer = ({ file, apiKey: propApiKey }: PDFViewerProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigateToPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() => navigateToPage(currentPage + 1)}
                   disabled={currentPage >= totalPages}
                 >
                   Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             )}
