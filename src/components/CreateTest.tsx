@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Save, Edit } from 'lucide-react';
+import { Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Question {
@@ -29,7 +29,12 @@ interface Test {
   created_at: string;
 }
 
-const CreateTest = () => {
+interface CreateTestProps {
+  editingTest?: Test | null;
+  onTestSaved?: () => void;
+}
+
+const CreateTest = ({ editingTest, onTestSaved }: CreateTestProps) => {
   const { profile } = useAuth();
   const [testData, setTestData] = useState({
     title: '',
@@ -38,7 +43,17 @@ const CreateTest = () => {
   });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingTest, setEditingTest] = useState<Test | null>(null);
+
+  useEffect(() => {
+    if (editingTest) {
+      setTestData({
+        title: editingTest.title,
+        description: editingTest.description,
+        show_answers_after_attempt: editingTest.show_answers_after_attempt,
+      });
+      setQuestions(editingTest.questions);
+    }
+  }, [editingTest]);
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -114,22 +129,16 @@ const CreateTest = () => {
         show_answers_after_attempt: false,
       });
       setQuestions([]);
-      setEditingTest(null);
+      
+      // Call onTestSaved callback if provided
+      if (onTestSaved) {
+        onTestSaved();
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to save test');
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadTestForEditing = (test: Test) => {
-    setEditingTest(test);
-    setTestData({
-      title: test.title,
-      description: test.description,
-      show_answers_after_attempt: test.show_answers_after_attempt,
-    });
-    setQuestions(test.questions);
   };
 
   return (
@@ -292,9 +301,11 @@ const CreateTest = () => {
       <div className="flex justify-end space-x-2">
         {editingTest && (
           <Button variant="outline" onClick={() => {
-            setEditingTest(null);
             setTestData({ title: '', description: '', show_answers_after_attempt: false });
             setQuestions([]);
+            if (onTestSaved) {
+              onTestSaved();
+            }
           }}>
             Cancel Edit
           </Button>
