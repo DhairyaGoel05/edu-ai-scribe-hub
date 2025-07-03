@@ -16,8 +16,13 @@ const Auth = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [role, setRole] = useState<'student' | 'instructor'>('student');
 
-  // Login form state
-  const [loginData, setLoginData] = useState({
+  // Separate login forms for student and instructor
+  const [studentLoginData, setStudentLoginData] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [instructorLoginData, setInstructorLoginData] = useState({
     email: '',
     password: ''
   });
@@ -32,10 +37,21 @@ const Auth = () => {
     age: ''
   });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(loginData.email, loginData.password);
+      await login(studentLoginData.email, studentLoginData.password);
+      toast.success('Welcome back!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed');
+    }
+  };
+
+  const handleInstructorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(instructorLoginData.email, instructorLoginData.password);
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error: any) {
@@ -64,18 +80,18 @@ const Auth = () => {
         role: role
       });
       toast.success('Account created successfully!');
-      navigate('/profile');
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Signup failed');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI PDF Assistant</h1>
-          <p className="text-gray-600">Choose your role and get started</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">AI PDF Assistant</h1>
+          <p className="text-gray-600 dark:text-gray-300">Choose your role and get started</p>
         </div>
 
         <Tabs value={mode} onValueChange={(value) => setMode(value as 'login' | 'signup')} className="w-full">
@@ -89,32 +105,34 @@ const Auth = () => {
               {/* Student Login */}
               <Card className="hover:shadow-lg transition-shadow">
                 <CardHeader className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <GraduationCap className="w-8 h-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-300" />
                   </div>
-                  <CardTitle className="text-xl">Student Login</CardTitle>
-                  <CardDescription>Access your learning dashboard</CardDescription>
+                  <CardTitle className="text-xl dark:text-white">Student Login</CardTitle>
+                  <CardDescription className="dark:text-gray-300">Access your learning dashboard</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleStudentLogin} className="space-y-4">
                     <div>
-                      <Label htmlFor="student-email">Email</Label>
+                      <Label htmlFor="student-email" className="dark:text-gray-200">Email</Label>
                       <Input
                         id="student-email"
                         type="email"
-                        value={loginData.email}
-                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        value={studentLoginData.email}
+                        onChange={(e) => setStudentLoginData({ ...studentLoginData, email: e.target.value })}
                         required
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="student-password">Password</Label>
+                      <Label htmlFor="student-password" className="dark:text-gray-200">Password</Label>
                       <Input
                         id="student-password"
                         type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        value={studentLoginData.password}
+                        onChange={(e) => setStudentLoginData({ ...studentLoginData, password: e.target.value })}
                         required
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     </div>
                     <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
@@ -127,32 +145,34 @@ const Auth = () => {
               {/* Instructor Login */}
               <Card className="hover:shadow-lg transition-shadow">
                 <CardHeader className="text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-purple-600" />
+                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-purple-600 dark:text-purple-300" />
                   </div>
-                  <CardTitle className="text-xl">Instructor Login</CardTitle>
-                  <CardDescription>Manage tests and students</CardDescription>
+                  <CardTitle className="text-xl dark:text-white">Instructor Login</CardTitle>
+                  <CardDescription className="dark:text-gray-300">Manage tests and students</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleInstructorLogin} className="space-y-4">
                     <div>
-                      <Label htmlFor="instructor-email">Email</Label>
+                      <Label htmlFor="instructor-email" className="dark:text-gray-200">Email</Label>
                       <Input
                         id="instructor-email"
                         type="email"
-                        value={loginData.email}
-                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        value={instructorLoginData.email}
+                        onChange={(e) => setInstructorLoginData({ ...instructorLoginData, email: e.target.value })}
                         required
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="instructor-password">Password</Label>
+                      <Label htmlFor="instructor-password" className="dark:text-gray-200">Password</Label>
                       <Input
                         id="instructor-password"
                         type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        value={instructorLoginData.password}
+                        onChange={(e) => setInstructorLoginData({ ...instructorLoginData, password: e.target.value })}
                         required
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     </div>
                     <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
@@ -166,10 +186,10 @@ const Auth = () => {
 
           <TabsContent value="signup">
             <div className="max-w-2xl mx-auto">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">Create Account</CardTitle>
-                  <CardDescription>Choose your role and fill in your details</CardDescription>
+                  <CardTitle className="text-2xl dark:text-white">Create Account</CardTitle>
+                  <CardDescription className="dark:text-gray-300">Choose your role and fill in your details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Role Selection */}
@@ -278,7 +298,7 @@ const Auth = () => {
         </Tabs>
 
         <div className="text-center mt-6">
-          <Button variant="link" onClick={() => navigate('/')}>
+          <Button variant="link" onClick={() => navigate('/')} className="dark:text-gray-300">
             Back to Home
           </Button>
         </div>

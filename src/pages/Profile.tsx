@@ -61,14 +61,14 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="flex items-center space-x-2">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="flex items-center space-x-2 dark:text-gray-300 dark:hover:text-white">
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Dashboard</span>
           </Button>
-          <Button variant="outline" onClick={logout}>
+          <Button variant="outline" onClick={logout} className="dark:border-gray-600 dark:text-gray-300 dark:hover:text-white">
             Logout
           </Button>
         </div>
@@ -76,22 +76,22 @@ const Profile = () => {
         <div className="grid md:grid-cols-3 gap-6">
           {/* Profile Overview */}
           <div className="md:col-span-1">
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
                   <AvatarImage src={profile.avatar_url} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-2xl dark:bg-gray-700 dark:text-white">
                     {profile.full_name?.charAt(0)?.toUpperCase() || profile.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-xl">{profile.full_name || 'User'}</CardTitle>
-                <CardDescription>{profile.email}</CardDescription>
+                <CardTitle className="text-xl dark:text-white">{profile.full_name || 'User'}</CardTitle>
+                <CardDescription className="dark:text-gray-300">{profile.email}</CardDescription>
                 <Badge variant={profile.role === 'instructor' ? 'default' : 'secondary'} className="mt-2">
                   {profile.role === 'instructor' ? 'Instructor' : 'Student'}
                 </Badge>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full" disabled>
+                <Button variant="outline" className="w-full dark:border-gray-600 dark:text-gray-300" disabled>
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Photo
                 </Button>
@@ -101,12 +101,12 @@ const Profile = () => {
 
           {/* Profile Details */}
           <div className="md:col-span-2">
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Manage your personal details</CardDescription>
+                    <CardTitle className="dark:text-white">Profile Information</CardTitle>
+                    <CardDescription className="dark:text-gray-300">Manage your personal details</CardDescription>
                   </div>
                   {!isEditing ? (
                     <Button onClick={() => setIsEditing(true)}>
@@ -114,7 +114,7 @@ const Profile = () => {
                     </Button>
                   ) : (
                     <div className="space-x-2">
-                      <Button variant="outline" onClick={handleCancel}>
+                      <Button variant="outline" onClick={handleCancel} className="dark:border-gray-600 dark:text-gray-300">
                         Cancel
                       </Button>
                       <Button onClick={handleSave}>
@@ -127,7 +127,7 @@ const Profile = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name" className="flex items-center space-x-2">
+                    <Label htmlFor="full_name" className="flex items-center space-x-2 dark:text-gray-200">
                       <User className="w-4 h-4" />
                       <span>Full Name</span>
                     </Label>
@@ -136,14 +136,15 @@ const Profile = () => {
                         id="full_name"
                         value={formData.full_name}
                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     ) : (
-                      <p className="text-gray-900 font-medium">{profile.full_name || 'Not set'}</p>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium">{profile.full_name || 'Not set'}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="age" className="flex items-center space-x-2">
+                    <Label htmlFor="age" className="flex items-center space-x-2 dark:text-gray-200">
                       <Calendar className="w-4 h-4" />
                       <span>Age</span>
                     </Label>
@@ -153,24 +154,25 @@ const Profile = () => {
                         type="number"
                         value={formData.age}
                         onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 0 })}
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     ) : (
-                      <p className="text-gray-900 font-medium">{profile.age || 'Not set'}</p>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium">{profile.age || 'Not set'}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center space-x-2">
+                  <Label htmlFor="email" className="flex items-center space-x-2 dark:text-gray-200">
                     <Mail className="w-4 h-4" />
                     <span>Email</span>
                   </Label>
-                  <p className="text-gray-900 font-medium">{profile.email}</p>
-                  <p className="text-sm text-gray-500">Email cannot be changed</p>
+                  <p className="text-gray-900 dark:text-gray-100 font-medium">{profile.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Email cannot be changed</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone_number" className="flex items-center space-x-2">
+                  <Label htmlFor="phone_number" className="flex items-center space-x-2 dark:text-gray-200">
                     <Phone className="w-4 h-4" />
                     <span>Phone Number</span>
                   </Label>
@@ -180,22 +182,23 @@ const Profile = () => {
                       type="tel"
                       value={formData.phone_number}
                       onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                      className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   ) : (
-                    <p className="text-gray-900 font-medium">{profile.phone_number || 'Not set'}</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">{profile.phone_number || 'Not set'}</p>
                   )}
                 </div>
 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-semibold mb-2">Account Information</h3>
+                <div className="pt-4 border-t dark:border-gray-700">
+                  <h3 className="text-lg font-semibold mb-2 dark:text-white">Account Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Role</Label>
-                      <p className="text-gray-900 font-medium capitalize">{profile.role}</p>
+                      <Label className="dark:text-gray-200">Role</Label>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium capitalize">{profile.role}</p>
                     </div>
                     <div>
-                      <Label>Member Since</Label>
-                      <p className="text-gray-900 font-medium">
+                      <Label className="dark:text-gray-200">Member Since</Label>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium">
                         {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
