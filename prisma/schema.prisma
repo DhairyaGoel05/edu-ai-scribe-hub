@@ -1,0 +1,166 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations for instructors
+  createdTests     Test[]                    @relation("InstructorTests")
+  studentRelations StudentTeacherRelation[] @relation("TeacherRelations")
+
+  // Relations for students
+  teacherRelations StudentTeacherRelation[] @relation("StudentRelations")
+  testAttempts     TestAttempt[]
+  testAssignments  TestAssignment[]
+
+  @@map("users")
+}
+
+model SelfStudyUser {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  preferences Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  testAttempts TestAttempt[]
+
+  @@map("self_study_users")
+}
+
+model Test {
+  id                        String      @id @default(cuid())
+  title                     String
+  description               String?
+  showAnswersAfterAttempt   Boolean     @default(false)
+  instructorId              String
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+
+  instructor      User             @relation("InstructorTests", fields: [instructorId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  testAttempts    TestAttempt[]
+  testAssignments TestAssignment[]
+
+  @@map("tests")
+}
+
+model Question {
+  id            String      @id @default(cuid())
+  testId        String
+  type          QuestionType
+  questionText  String
+  options       String[]    @default([])
+  correctAnswer String
+  points        Int         @default(1)
+  createdAt     DateTime    @default(now())
+
+  test    Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers TestAttemptAnswer[]
+
+  @@map("questions")
+}
+
+model StudentTeacherRelation {
+  id          String   @id @default(cuid())
+  studentId   String
+  instructorId String
+  createdAt   DateTime @default(now())
+
+  student    User @relation("StudentRelations", fields: [studentId], references: [id], onDelete: Cascade)
+  instructor User @relation("TeacherRelations", fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, instructorId])
+  @@map("student_teacher_relations")
+}
+
+model TestAssignment {
+  id           String   @id @default(cuid())
+  testId       String
+  studentId    String
+  assignedBy   String
+  assignedAt   DateTime @default(now())
+  dueDate      DateTime?
+  status       AssignmentStatus @default(ASSIGNED)
+
+  test     Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student  User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, studentId])
+  @@map("test_assignments")
+}
+
+model TestAttempt {
+  id              String   @id @default(cuid())
+  testId          String
+  studentId       String?
+  selfStudyUserId String?
+  score           Int?
+  totalPoints     Int
+  completedAt     DateTime @default(now())
+  evaluationStatus EvaluationStatus @default(PENDING)
+  aiEvaluation    Json?
+  instructorFeedback String?
+
+  test           Test                @relation(fields: [testId], references: [id], onDelete: Cascade)
+  student        User?               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  selfStudyUser  SelfStudyUser?      @relation(fields: [selfStudyUserId], references: [id], onDelete: Cascade)
+  answers        TestAttemptAnswer[]
+
+  @@map("test_attempts")
+}
+
+model TestAttemptAnswer {
+  id             String @id @default(cuid())
+  testAttemptId  String
+  questionId     String
+  answerText     String
+  isCorrect      Boolean?
+  pointsAwarded  Int     @default(0)
+
+  testAttempt TestAttempt @relation(fields: [testAttemptId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([testAttemptId, questionId])
+  @@map("test_attempt_answers")
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+}
+
+enum QuestionType {
+  MCQ
+  SHORT_ANSWER
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  COMPLETED
+  OVERDUE
+}
+
+enum EvaluationStatus {
+  PENDING
+  AI_EVALUATED
+  INSTRUCTOR_EVALUATED
+  BOTH_EVALUATED
+}
