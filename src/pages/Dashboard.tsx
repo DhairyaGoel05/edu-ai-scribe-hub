@@ -32,7 +32,7 @@ const Dashboard = () => {
     }
 
     // Set default tab based on user role
-    if (profile?.role === 'instructor') {
+    if (profile?.role === 'INSTRUCTOR') {
       setActiveTab('create-test');
     }
   }, [profile]);
@@ -111,6 +111,10 @@ const Dashboard = () => {
     }
   };
 
+  const getUserRole = (): 'student' | 'instructor' => {
+    return profile?.role === 'INSTRUCTOR' ? 'instructor' : 'student';
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -119,7 +123,7 @@ const Dashboard = () => {
           onTabChange={setActiveTab}
           hasApiKey={!!apiKey}
           onNavigateHome={handleNavigateHome}
-          userRole={profile?.role || 'student'}
+          userRole={getUserRole()}
         />
         
         <div className="flex-1 flex flex-col">

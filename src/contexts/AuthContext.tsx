@@ -9,6 +9,11 @@ interface UserProfile {
   role: 'STUDENT' | 'INSTRUCTOR';
   createdAt?: string;
   updatedAt?: string;
+  full_name?: string;
+  phone_number?: string;
+  age?: number;
+  avatar_url?: string;
+  created_at?: string;
 }
 
 interface AuthContextType {

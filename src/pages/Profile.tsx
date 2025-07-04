@@ -24,7 +24,7 @@ const Profile = () => {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: profile.full_name || '',
+        full_name: profile.full_name || profile.name || '',
         phone_number: profile.phone_number || '',
         age: profile.age || 0,
       });
@@ -33,7 +33,12 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      await updateProfile(formData);
+      await updateProfile({
+        full_name: formData.full_name,
+        phone_number: formData.phone_number,
+        age: formData.age,
+        name: formData.full_name
+      });
       setIsEditing(false);
       toast.success('Profile updated successfully!');
     } catch (error: any) {
@@ -44,7 +49,7 @@ const Profile = () => {
   const handleCancel = () => {
     if (profile) {
       setFormData({
-        full_name: profile.full_name || '',
+        full_name: profile.full_name || profile.name || '',
         phone_number: profile.phone_number || '',
         age: profile.age || 0,
       });
@@ -59,6 +64,9 @@ const Profile = () => {
       </div>
     );
   }
+
+  const displayName = profile.full_name || profile.name || 'User';
+  const isInstructor = profile.role === 'INSTRUCTOR';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
@@ -81,13 +89,13 @@ const Profile = () => {
                 <Avatar className="w-24 h-24 mx-auto mb-4">
                   <AvatarImage src={profile.avatar_url} />
                   <AvatarFallback className="text-2xl dark:bg-gray-700 dark:text-white">
-                    {profile.full_name?.charAt(0)?.toUpperCase() || profile.email.charAt(0).toUpperCase()}
+                    {displayName.charAt(0)?.toUpperCase() || profile.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-xl dark:text-white">{profile.full_name || 'User'}</CardTitle>
+                <CardTitle className="text-xl dark:text-white">{displayName}</CardTitle>
                 <CardDescription className="dark:text-gray-300">{profile.email}</CardDescription>
-                <Badge variant={profile.role === 'instructor' ? 'default' : 'secondary'} className="mt-2">
-                  {profile.role === 'instructor' ? 'Instructor' : 'Student'}
+                <Badge variant={isInstructor ? 'default' : 'secondary'} className="mt-2">
+                  {isInstructor ? 'Instructor' : 'Student'}
                 </Badge>
               </CardHeader>
               <CardContent>
@@ -139,7 +147,7 @@ const Profile = () => {
                         className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     ) : (
-                      <p className="text-gray-900 dark:text-gray-100 font-medium">{profile.full_name || 'Not set'}</p>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium">{displayName}</p>
                     )}
                   </div>
 
@@ -194,12 +202,12 @@ const Profile = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="dark:text-gray-200">Role</Label>
-                      <p className="text-gray-900 dark:text-gray-100 font-medium capitalize">{profile.role}</p>
+                      <p className="text-gray-900 dark:text-gray-100 font-medium capitalize">{profile.role.toLowerCase()}</p>
                     </div>
                     <div>
                       <Label className="dark:text-gray-200">Member Since</Label>
                       <p className="text-gray-900 dark:text-gray-100 font-medium">
-                        {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                        {profile.createdAt || profile.created_at ? new Date(profile.createdAt || profile.created_at!).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                   </div>
