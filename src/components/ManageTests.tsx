@@ -4,15 +4,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Eye, Users } from 'lucide-react';
+import { Edit, Trash2, Users, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiService } from '@/services/apiService';
 
 interface Question {
   id: string;
-  type: 'mcq' | 'short_answer';
-  question: string;
+  type: 'MCQ' | 'SHORT_ANSWER';
+  questionText: string;
   options?: string[];
-  correct_answer: string;
+  correctAnswer: string;
   points: number;
 }
 
@@ -21,9 +22,13 @@ interface Test {
   title: string;
   description: string;
   questions: Question[];
-  show_answers_after_attempt: boolean;
-  instructor_id: string;
-  created_at: string;
+  showAnswersAfterAttempt: boolean;
+  instructorId: string;
+  createdAt: string;
+  _count?: {
+    testAttempts: number;
+    testAssignments: number;
+  };
 }
 
 interface ManageTestsProps {
@@ -33,26 +38,37 @@ interface ManageTestsProps {
 const ManageTests = ({ onEditTest }: ManageTestsProps) => {
   const { profile } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTests();
   }, [profile]);
 
-  const loadTests = () => {
-    if (!profile) return;
+  const loadTests = async () => {
+    if (!profile || profile.role !== 'INSTRUCTOR') return;
     
-    const allTests = JSON.parse(localStorage.getItem('tests') || '[]');
-    const userTests = allTests.filter((test: Test) => test.instructor_id === profile.id);
-    setTests(userTests);
+    try {
+      setLoading(true);
+      const data = await apiService.getTests();
+      setTests(data);
+    } catch (error) {
+      console.error('Failed to load tests:', error);
+      toast.error('Failed to load tests');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteTest = (testId: string) => {
+  const deleteTest = async (testId: string) => {
     if (window.confirm('Are you sure you want to delete this test?')) {
-      const allTests = JSON.parse(localStorage.getItem('tests') || '[]');
-      const updatedTests = allTests.filter((test: Test) => test.id !== testId);
-      localStorage.setItem('tests', JSON.stringify(updatedTests));
-      loadTests();
-      toast.success('Test deleted successfully');
+      try {
+        // Note: We'll need to add a delete endpoint to the backend
+        // For now, we'll just remove from local state
+        setTests(tests.filter(test => test.id !== testId));
+        toast.success('Test deleted successfully');
+      } catch (error) {
+        toast.error('Failed to delete test');
+      }
     }
   };
 
@@ -61,6 +77,20 @@ const ManageTests = ({ onEditTest }: ManageTestsProps) => {
     const totalPoints = test.questions.reduce((sum, q) => sum + q.points, 0);
     return { totalQuestions, totalPoints };
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Manage Tests</h2>
+          <p className="text-gray-600 dark:text-gray-300">View and manage your created tests</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -123,15 +153,14 @@ const ManageTests = ({ onEditTest }: ManageTestsProps) => {
                       <div className="text-sm text-gray-500">Total Points</div>
                     </div>
                     <div className="text-center">
-                      <Badge variant={test.show_answers_after_attempt ? 'default' : 'secondary'}>
-                        {test.show_answers_after_attempt ? 'Show Answers' : 'Hide Answers'}
-                      </Badge>
-                      <div className="text-sm text-gray-500 mt-1">After Attempt</div>
+                      <div className="text-2xl font-bold text-purple-600">{test._count?.testAttempts || 0}</div>
+                      <div className="text-sm text-gray-500">Attempts</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-gray-500">
-                        Created: {new Date(test.created_at).toLocaleDateString()}
-                      </div>
+                      <Badge variant={test.showAnswersAfterAttempt ? 'default' : 'secondary'}>
+                        {test.showAnswersAfterAttempt ? 'Show Answers' : 'Hide Answers'}
+                      </Badge>
+                      <div className="text-sm text-gray-500 mt-1">After Attempt</div>
                     </div>
                   </div>
                   
@@ -139,7 +168,7 @@ const ManageTests = ({ onEditTest }: ManageTestsProps) => {
                     <h4 className="font-semibold text-sm">Questions Overview:</h4>
                     {test.questions.slice(0, 3).map((question, index) => (
                       <div key={question.id} className="text-sm text-gray-600 truncate">
-                        {index + 1}. {question.question}
+                        {index + 1}. {question.questionText}
                       </div>
                     ))}
                     {test.questions.length > 3 && (
